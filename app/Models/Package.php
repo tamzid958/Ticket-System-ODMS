@@ -20,7 +20,7 @@ class Package extends Model
 
     protected $casts = [
         'quota' => 'integer',
-        'per_unit_price' => 'integer',
+        'per_unit_price' => 'decimal:5,2',
         'excess_unit_multiplier' => 'integer',
         'weekend_unit_multiplier' => 'integer',
     ];
