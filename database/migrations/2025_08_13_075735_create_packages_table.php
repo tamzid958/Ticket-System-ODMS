@@ -19,6 +19,7 @@ return new class extends Migration
             $table->decimal('per_unit_price', 5, 2)->default(0.00);
             $table->integer('excess_unit_multiplier')->default(1);
             $table->integer('weekend_unit_multiplier')->default(2);
+            $table->json('timings');
             $table->timestamps();
 
             $table->softDeletes();

@@ -22,15 +22,6 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
         });
-
-        Schema::create('ticket_comments', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('ticket_id')->constrained('tickets');
-            $table->foreignId('user_id')->constrained('users');
-            $table->text('comment');
-            $table->timestamps();
-            $table->softDeletes();
-        });
     }
 
     /**

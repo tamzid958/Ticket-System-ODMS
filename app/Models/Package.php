@@ -17,6 +17,7 @@ class Package extends Model
         'per_unit_price',
         'excess_unit_multiplier',
         'weekend_unit_multiplier',
+        'timings',
     ];
 
     protected $casts = [
@@ -24,12 +25,8 @@ class Package extends Model
         'per_unit_price' => 'decimal:5,2',
         'excess_unit_multiplier' => 'integer',
         'weekend_unit_multiplier' => 'integer',
+        'timings' => 'array',
     ];
-
-    public function timings()
-    {
-        return $this->belongsToMany(Timing::class, 'package_timings');
-    }
 
     public function clients()
     {

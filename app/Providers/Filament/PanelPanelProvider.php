@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use Filament\Http\Middleware\Authenticate;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -25,6 +26,7 @@ class PanelPanelProvider extends PanelProvider
     {
         return $panel
             ->default()
+            ->spa()
             ->id('panel')
             ->path('panel')
             ->login()
@@ -41,6 +43,7 @@ class PanelPanelProvider extends PanelProvider
                 AccountWidget::class,
                 FilamentInfoWidget::class,
             ])
+            ->topNavigation()
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -51,6 +54,9 @@ class PanelPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+            ])
+            ->plugins([
+                FilamentShieldPlugin::make(),
             ])
             ->authMiddleware([
                 Authenticate::class,
