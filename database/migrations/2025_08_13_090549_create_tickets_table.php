@@ -13,21 +13,23 @@ return new class extends Migration
     {
         Schema::create('tickets', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users');
+            $table->foreignId('client_id')->constrained('clients');
             $table->string('subject');
             $table->text('description');
             $table->enum('status', ['open', 'closed', 'pending'])->default('open');
             $table->timestamp('resolved_at')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('ticket_comments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('ticket_id')->constrained('tickets')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('ticket_id')->constrained('tickets');
+            $table->foreignId('user_id')->constrained('users');
             $table->text('comment');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

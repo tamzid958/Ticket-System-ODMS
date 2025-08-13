@@ -14,12 +14,15 @@ return new class extends Migration
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
-            $table->foreignId('package_id')->constrained('package')->onDelete('cascade');
+            $table->foreignId('package_id')->constrained('packages');
             $table->timestamps();
+
+            $table->softDeletes();
         });
 
         Schema::table('users', function (Blueprint $table) {
-            $table->foreignId('client_id')->nullable()->constrained('client')->onDelete('set null');
+            $table->foreignId('client_id')->nullable()->constrained('clients');
+            $table->softDeletes();
         });
     }
 

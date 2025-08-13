@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('client_monthly_summaries', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
+            $table->foreignId('client_id')->constrained('clients');
             $table->year('year');
             $table->unsignedTinyInteger('month'); // 1-12
 
@@ -31,6 +31,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['client_id', 'year', 'month']);
+
+            $table->softDeletes();
         });
     }
 

@@ -18,13 +18,17 @@ return new class extends Migration
             $table->time('end_time');
             $table->integer('multiplier')->default(1);
             $table->timestamps();
+
+            $table->softDeletes();
         });
 
         Schema::create('package_timings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('timing_id')->constrained('timings')->onDelete('cascade');
-            $table->foreignId('package_id')->constrained('packages')->onDelete('cascade');
+            $table->foreignId('timing_id')->constrained('timings');
+            $table->foreignId('package_id')->constrained('packages');
             $table->timestamps();
+
+            $table->softDeletes();
         });
     }
 

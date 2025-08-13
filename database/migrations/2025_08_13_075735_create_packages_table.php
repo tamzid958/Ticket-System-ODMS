@@ -20,6 +20,8 @@ return new class extends Migration
             $table->integer('excess_unit_multiplier')->default(1);
             $table->integer('weekend_unit_multiplier')->default(2);
             $table->timestamps();
+
+            $table->softDeletes();
         });
     }
 
