@@ -14,6 +14,7 @@ use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -39,23 +40,38 @@ class ClientResource extends Resource
         return $schema
             ->components([
                 TextInput::make('name')
-                    ->required(),
-                TextInput::make('package_id')
                     ->required()
-                    ->numeric(),
+                    ->columnSpanFull(),
+               Select::make('package_id')
+                    ->label('Package')
+                    ->relationship('package', 'name')
+                    ->required()
+                    ->columnSpanFull(),
+                Select::make('users')
+                    ->multiple()
+                    ->label('Users')
+                    ->relationship('users', 'name', fn ($query) => $query->role('client'))
+                    ->preload()
+                    ->searchable()
+                    ->columnSpanFull(),
             ]);
+
     }
 
     public static function table(Table $table): Table
     {
         return $table
+            ->paginated(false)
             ->recordTitleAttribute('Client')
             ->columns([
                 TextColumn::make('name')
                     ->searchable(),
-                TextColumn::make('package_id')
-                    ->numeric()
-                    ->sortable(),
+                TextColumn::make('package.name'),
+                TextColumn::make('users')
+                    ->label('Users')
+                    ->formatStateUsing(function ($state, $record) {
+                        return optional($record->users)->pluck('name')->join(', ') ?: 'No users assigned';
+                    }),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

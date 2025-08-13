@@ -2,9 +2,10 @@
 
 namespace App\Filament\Resources\Tickets\Schemas;
 
+use App\Enums\TicketStatus;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\RichEditor;
 use Filament\Schemas\Schema;
 

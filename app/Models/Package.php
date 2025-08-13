@@ -12,9 +12,9 @@ class Package extends Model
 
     protected $fillable = [
         'name',
-        'description',
         'monthly_quota',
         'per_unit_price',
+        'base_price',
         'excess_unit_multiplier',
         'weekend_unit_multiplier',
         'timings',
@@ -22,7 +22,8 @@ class Package extends Model
 
     protected $casts = [
         'monthly_quota' => 'integer',
-        'per_unit_price' => 'decimal:5,2',
+        'per_unit_price' => 'decimal:2',
+        'base_price' => 'decimal:2',
         'excess_unit_multiplier' => 'integer',
         'weekend_unit_multiplier' => 'integer',
         'timings' => 'array',

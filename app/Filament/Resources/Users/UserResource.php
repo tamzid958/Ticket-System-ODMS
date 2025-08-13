@@ -15,10 +15,12 @@ use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -46,12 +48,15 @@ class UserResource extends Resource
                     ->label('Email address')
                     ->email()
                     ->required(),
+                Select::make('roles')
+                    ->relationship('roles', 'name')
+                    ->multiple()
+                    ->preload()
+                    ->searchable(),
                 TextInput::make('password')
                     ->password()
                     ->required()
                     ->hiddenOn('edit'),
-                TextInput::make('client_id')
-                    ->numeric(),
             ]);
     }
 
@@ -62,12 +67,17 @@ class UserResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->searchable(),
+                TextColumn::make('client.name')
+                    ->label('Client'),
                 TextColumn::make('email')
                     ->label('Email address')
                     ->searchable(),
-                TextColumn::make('email_verified_at')
-                    ->dateTime()
-                    ->sortable(),
+                TextColumn::make('roles')
+                    ->label('Role')
+                    ->formatStateUsing(function ($record) {
+                       $roles = $record->getRoleNames()->unique()->join(', ');
+                        return $roles ?: 'No Role';
+                    }),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -76,9 +86,6 @@ class UserResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('client_id')
-                    ->numeric()
-                    ->sortable(),
                 TextColumn::make('deleted_at')
                     ->dateTime()
                     ->sortable()

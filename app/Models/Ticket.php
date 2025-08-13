@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Kirschbaum\Commentions\Contracts\Commentable;
 use Kirschbaum\Commentions\HasComments;
+use App\Enums\TicketStatus;
 
 class Ticket extends Model implements Commentable
 {
@@ -36,6 +37,23 @@ class Ticket extends Model implements Commentable
     public function client()
     {
         return $this->belongsTo(Client::class);
+    }
+
+    protected static function booted()
+    {
+        static::creating(function ($ticket) {
+            $user = auth()->user();
+
+            if (!$user->hasRole('client')) {
+                throw new \Exception('Only clients can create tickets.');
+            }
+            if (!$user->client_id) {
+                throw new \Exception('User does not belong to any client.');
+            }
+
+            $ticket->user_id = $user->id;
+            $ticket->client_id = $user->client_id;
+        });
     }
 
 }

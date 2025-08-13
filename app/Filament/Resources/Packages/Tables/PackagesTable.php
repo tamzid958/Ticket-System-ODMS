@@ -10,41 +10,35 @@ use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Filament\Tables\Columns\Layout\Stack;
+use Filament\Support\Enums\FontWeight;
+use Filament\Support\Enums\TextSize;
 
 class PackagesTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            ->paginated(false)
+            ->contentGrid([
+                'md' => 2,
+                'lg' => 3,
+                'xl' => 4,
+            ])
             ->columns([
-                TextColumn::make('name')
-                    ->searchable(),
-                TextColumn::make('description')
-                    ->searchable(),
-                TextColumn::make('monthly_quota')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('per_unit_price')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('excess_unit_multiplier')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('weekend_unit_multiplier')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                Stack::make([
+                    TextColumn::make('name')
+                        ->size(TextSize::Large)
+                        ->weight(FontWeight::Bold)
+                        ->color('primary')
+                        ->formatStateUsing(fn ($state) => $state . ' Package')
+                        ->searchable(),
+                    TextColumn::make('monthly_quota')
+                        ->formatStateUsing(fn ($state) => 'Quota: ' . $state),
+                    TextColumn::make('base_price')
+                        ->money('BDT')
+                        ->formatStateUsing(fn ($state) => 'Price: ' . $state),
+                ])
             ])
             ->filters([
                 TrashedFilter::make(),
@@ -53,11 +47,7 @@ class PackagesTable
                 EditAction::make(),
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
-                ]),
+
             ]);
     }
 }
