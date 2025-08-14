@@ -54,7 +54,6 @@ class TicketResource extends Resource
             'index' => ListTickets::route('/'),
             'create' => CreateTicket::route('/create'),
             'view' => ViewTicket::route('/{record}'),
-            'edit' => EditTicket::route('/{record}/edit'),
         ];
     }
 

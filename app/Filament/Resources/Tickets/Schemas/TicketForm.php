@@ -17,6 +17,7 @@ class TicketForm
             ->components([
                 TextInput::make('subject')
                     ->required()
+                    ->maxLength(255)
                     ->columnSpanFull(),
                 RichEditor::make('description')
                     ->required()
