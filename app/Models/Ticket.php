@@ -20,6 +20,9 @@ class Ticket extends Model implements Commentable
         'description',
         'status',
         'resolved_at',
+        'is_weekend_unit',
+        'is_excess_unit',
+        'unit_value',
     ];
 
     protected $casts = [
@@ -27,6 +30,9 @@ class Ticket extends Model implements Commentable
         'client_id' => 'integer',
         'status' => TicketStatus::class,
         'resolved_at' => 'datetime',
+        'is_weekend_unit' => 'boolean',
+        'is_excess_unit' => 'boolean',
+        'unit_value' => 'integer',
     ];
 
     public function user()
