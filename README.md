@@ -1,61 +1,188 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Laravel Setup Guide
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This guide walks you through setting up a Laravel project with PostgreSQL, Filament, and Filament Shield.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Prerequisites
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Ubuntu or Debian-based system
+- Docker
+- PHP >= 8.1
+- Node.js & npm
+- Composer
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 1. Install PHP and Required Extensions
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+```bash
+sudo apt update
+sudo apt install php-cli php-mbstring php-xml php-curl php-zip unzip curl -y
+sudo apt install php-pgsql -y
+sudo apt install php-intl -y   # or sudo apt install php8.3-intl -y
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Check PHP version:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+php -v
+```
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 2. Install Composer
 
-### Premium Partners
+```bash
+cd ~
+curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+composer --version
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+---
 
-## Contributing
+## 3. Install Node.js & npm
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+sudo apt install nodejs npm -y
+node -v
+npm -v
+```
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 4. Run Docker PostgreSQL
 
-## Security Vulnerabilities
+```bash
+docker run --name laravel-postgres \
+  -e POSTGRES_USER=laravel \
+  -e POSTGRES_PASSWORD=secret \
+  -e POSTGRES_DB=laravel_db \
+  -p 5432:5432 \
+  -d postgres:16
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+## 5. Configure Environment Variables
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Copy `.env.example` to `.env`:
+
+```bash
+cp .env.example .env
+```
+
+Update database variables in `.env`:
+
+```
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=laravel_db
+DB_USERNAME=laravel
+DB_PASSWORD=secret
+```
+
+---
+
+## 6. Install Dependencies
+
+```bash
+composer install
+npm install
+```
+
+---
+
+## 7. Generate App Key
+
+```bash
+php artisan key:generate
+```
+
+---
+
+## 8. Run Database Migrations
+
+```bash
+php artisan migrate
+```
+
+---
+
+## 9. Run Laravel Server & Frontend
+
+Start Laravel server:
+
+```bash
+php artisan serve
+```
+
+Start frontend (Vite):
+
+```bash
+npm run dev
+```
+
+---
+
+## 10. Create Filament Admin User
+
+If no user exists:
+
+```bash
+php artisan make:filament-user
+```
+
+Follow the prompts to create a user.
+
+---
+
+## 11. Install Filament Shield
+
+```bash
+composer require bezhansalleh/filament-shield:4.x-dev
+```
+
+After installation, run the following commands:
+
+```bash
+# Publish Shield resources
+php artisan vendor:publish --provider="BezhanSalleh\FilamentShield\FilamentShieldServiceProvider"
+
+# Run migrations
+php artisan migrate
+
+# Install Shield
+php artisan shield:install --fresh
+
+# Create super admin user
+php artisan shield:super-admin
+```
+
+Follow the prompts to select a user ID for the super admin.
+
+---
+
+## 12. Assign Permissions
+
+Go to:
+
+```
+http://127.0.0.1:8000/panel/shield/roles
+```
+
+Edit the super admin role and select **all permissions**.
+
+---
+
+## Notes
+
+- Make sure Docker is running before executing database-related commands.
+- Node.js version should be compatible with Laravel Vite.
+- Always run `composer install` and `npm install` when pulling updates from the repository.
+
+---
+
+This completes the setup for Laravel with PostgreSQL, Filament, and Shield.
