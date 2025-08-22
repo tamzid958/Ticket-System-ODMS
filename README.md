@@ -148,9 +148,6 @@ composer require bezhansalleh/filament-shield:4.x-dev
 After installation, run the following commands:
 
 ```bash
-# Publish Shield resources
-php artisan vendor:publish --provider="BezhanSalleh\FilamentShield\FilamentShieldServiceProvider"
-
 # Run migrations
 php artisan migrate
 
@@ -186,3 +183,23 @@ Edit the super admin role and select **all permissions**.
 ---
 
 This completes the setup for Laravel with PostgreSQL, Filament, and Shield.
+
+
+
+## Running the Project
+
+After completing all of the setup steps, you need to run the following commands to start the project:
+
+```bash
+# Start Vite for frontend assets
+npm run dev
+
+# Serve the Laravel backend
+php artisan serve
+
+## Running Migrations
+
+If you need to apply or reapply database migrations, run:
+
+```bash
+php artisan migrate
