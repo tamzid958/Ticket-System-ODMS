@@ -23,6 +23,7 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 class ClientResource extends Resource
@@ -116,5 +117,17 @@ class ClientResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+
+        public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        // If the logged-in user is a client, restrict to their own tickets
+        if (Auth::user()?->hasRole('client')) {
+            $query->where('client_id', Auth::user()->client_id);
+        }
+
+        return $query;
     }
 }

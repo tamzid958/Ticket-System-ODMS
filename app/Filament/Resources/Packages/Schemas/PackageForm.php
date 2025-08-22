@@ -23,20 +23,16 @@ class PackageForm
                     ->required()
                     ->numeric()
                     ->default(1),
-                TextInput::make('per_unit_price')
-                    ->required()
-                    ->numeric()
-                    ->default(0),
                 TextInput::make('base_price')
                     ->required()
                     ->numeric()
                     ->default(0),
-                Slider::make('excess_unit_multiplier')
+                TextInput::make('excess_unit_price')
                     ->required()
-                     ->range(minValue: 0, maxValue: 10)
-                    ->step(1)
-                    ->default(1)
-                    ->tooltips(),
+                    ->numeric()
+                    ->default(0)
+                    ->label('Excess Unit Price'),
+
                 Slider::make('weekend_unit_multiplier')
                     ->required()
                     ->default(1)
