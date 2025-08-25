@@ -42,10 +42,16 @@ class ClientResource extends Resource
                 TextInput::make('name')
                     ->required()
                     ->columnSpanFull(),
-               Select::make('package_id')
+                Select::make('package_id')
                     ->label('Package')
                     ->relationship('package', 'name')
                     ->required()
+                    ->columnSpanFull(),
+                TextInput::make('discount')
+                    ->label('Discount')
+                    ->numeric()
+                    ->minValue(0)
+                    ->maxValue(100)
                     ->columnSpanFull(),
                 Select::make('users')
                     ->multiple()
@@ -55,7 +61,6 @@ class ClientResource extends Resource
                     ->searchable()
                     ->columnSpanFull(),
             ]);
-
     }
 
     public static function table(Table $table): Table
@@ -67,14 +72,16 @@ class ClientResource extends Resource
                 TextColumn::make('name')
                     ->searchable(),
                 TextColumn::make('package.name'),
-
-                TextColumn::make('users_display') // fake column
+                TextColumn::make('discount')
+                    ->label('Discount')
+                    ->sortable()
+                    ->formatStateUsing(fn ($state) => number_format($state, 2))
+                    ->extraAttributes(['class' => 'text-right']),
+                TextColumn::make('users_display')
                     ->label('Users')
                     ->getStateUsing(function ($record) {
-                        // Make sure users are eager-loaded to avoid N+1
                         $users = $record->relationLoaded('users') ? $record->users : $record->users()->get();
 
-                        // Remove duplicates
                         $uniqueUsers = $users->unique('id');
                         $userNames = $uniqueUsers->pluck('name');
 
@@ -94,8 +101,6 @@ class ClientResource extends Resource
                         return $uniqueUsers->pluck('name')->join(', ');
                     })
                     ->wrap(),
-
-
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
