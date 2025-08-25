@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+    app:
+        build:
+            context: .
+        container_name: tts-odms
+        ports:
+            - "${APP_PORT}:8000"
+        depends_on:
+            - db
+
+    db:
+        image: postgres:latest
+        container_name: tts_db
+        environment:
+            POSTGRES_DB: ${DB_DATABASE}
+            POSTGRES_USER: ${DB_USERNAME}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+        ports:
+            - "5432:5432"
+        volumes:
+            - ./postgres_data:/var/lib/postgresql/data
