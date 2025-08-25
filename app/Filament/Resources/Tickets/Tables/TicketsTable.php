@@ -14,58 +14,44 @@ use Illuminate\Support\Collection;
 use Filament\Tables\Table;
 use App\Models\Ticket;
 
+use Filament\Actions\Action;
+use App\Enums\TicketStatus;
+
 class TicketsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
-                ->query(
-                    Ticket::query()
-                    ->when(auth()->user()->client_id, function ($query, $clientId) {
-                        $query->where('client_id', $clientId);
+            ->query(
+                Ticket::query()
+                    ->when(auth()->user()->hasRole('client'), function ($query) {
+                        $query->where('client_id', auth()->user()->client_id);
                     })
                     ->orderByRaw("CASE WHEN status = 'open' THEN 1 ELSE 2 END ASC")
-                    ->latest() // optional secondary sort by created_at
-                )
-                ->columns([
-                    TextColumn::make('user.name')
-                        ->numeric()
-                        ->sortable(),
-                    TextColumn::make('client.name')
-                        ->numeric()
-                        ->sortable(),
-                    TextColumn::make('subject')
-                        ->searchable(),
-                    TextColumn::make('status')
-                        ->searchable(),
-                    TextColumn::make('resolved_at')
-                        ->dateTime()
-                        ->sortable(),
-                    TextColumn::make('created_at')
-                        ->dateTime()
-                        ->sortable()
-                        ->toggleable(isToggledHiddenByDefault: true),
-                    TextColumn::make('updated_at')
-                        ->dateTime()
-                        ->sortable()
-                        ->toggleable(isToggledHiddenByDefault: true),
-                    TextColumn::make('deleted_at')
-                        ->dateTime()
-                        ->sortable()
-                        ->toggleable(isToggledHiddenByDefault: true),
-                ])
-                ->filters([
-                    TrashedFilter::make(),
-                ])
-                ->recordActions([
-                    ViewAction::make(),
-                ])
-                ->toolbarActions([
-                    BulkActionGroup::make([
-                        DeleteBulkAction::make(),
-                        ForceDeleteBulkAction::make(),
-                        RestoreBulkAction::make(),
-                    ]),
-                ]);
+                    ->latest()
+            )
+            ->columns([
+                TextColumn::make('user.name')->sortable(),
+                TextColumn::make('client.name')->sortable(),
+                TextColumn::make('subject')->searchable(),
+                TextColumn::make('status')->badge()->sortable(),
+                TextColumn::make('resolved_at')->dateTime()->sortable(),
+                TextColumn::make('created_at')->dateTime()->sortable(),
+            ])
+            ->recordActions([
+                ViewAction::make(),
+                Action::make('resolve')
+                    ->label('Resolve')
+                    ->color('success')
+                    ->icon('heroicon-o-check')
+                    ->requiresConfirmation()
+                    ->visible(fn ($record) => $record->status !== TicketStatus::CLOSED)
+                    ->action(function ($record) {
+                        $record->update([
+                            'status' => TicketStatus::CLOSED,
+                            'resolved_at' => now(),
+                        ]);
+                    }),
+            ]);
     }
 }

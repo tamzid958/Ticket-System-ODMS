@@ -17,6 +17,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class TicketResource extends Resource
 {
@@ -63,5 +64,20 @@ class TicketResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        $user = Auth::user();
+
+        if ($user?->hasRole('client')) {
+            // Client users only see their own tickets
+            $query->where('client_id', $user->client_id);
+        }
+
+        // Support and Admin roles see all tickets → no restriction
+
+        return $query;
     }
 }
