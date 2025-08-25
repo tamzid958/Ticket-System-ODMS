@@ -20,8 +20,8 @@ class IcsHolidayService
         // we can delete the file later in the method. need to discuss
         $tempPath = storage_path("temp_holidays_{$year}.ics");
         file_put_contents($tempPath, $icsFileContent);
-
-        $this->ical = ICal::fromString($icsFileContent, [
+        
+       $this->ical = new ICal($tempPath, [
             'defaultSpan'           => 2,
             'defaultTimeZone'       => 'Asia/Dhaka',
             'defaultWeekStart'      => 'MO',
