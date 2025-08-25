@@ -142,15 +142,5 @@ class ClientResource extends Resource
             ]);
     }
 
-    public static function getEloquentQuery(): Builder
-    {
-        $query = parent::getEloquentQuery();
 
-        // If the logged-in user is a client, restrict to their own tickets
-        if (Auth::user()?->hasRole('client')) {
-            $query->where('client_id', Auth::user()->client_id);
-        }
-
-        return $query;
-    }
 }
