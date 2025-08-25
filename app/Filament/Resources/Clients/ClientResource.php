@@ -23,8 +23,8 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 use UnitEnum;
-
 class ClientResource extends Resource
 {
     protected static ?string $model = Client::class;
@@ -67,11 +67,35 @@ class ClientResource extends Resource
                 TextColumn::make('name')
                     ->searchable(),
                 TextColumn::make('package.name'),
-                TextColumn::make('users')
+
+                TextColumn::make('users_display') // fake column
                     ->label('Users')
-                    ->formatStateUsing(function ($state, $record) {
-                        return optional($record->users)->pluck('name')->join(', ') ?: 'No users assigned';
-                    }),
+                    ->getStateUsing(function ($record) {
+                        // Make sure users are eager-loaded to avoid N+1
+                        $users = $record->relationLoaded('users') ? $record->users : $record->users()->get();
+
+                        // Remove duplicates
+                        $uniqueUsers = $users->unique('id');
+                        $userNames = $uniqueUsers->pluck('name');
+
+                        if ($userNames->isEmpty()) {
+                            return 'No users assigned';
+                        }
+
+                        if ($userNames->count() <= 3) {
+                            return $userNames->join(', ');
+                        }
+
+                        return $userNames->take(3)->join(', ') . ' and ' . ($userNames->count() - 3) . ' more...';
+                    })
+                    ->tooltip(function ($record) {
+                        $users = $record->relationLoaded('users') ? $record->users : $record->users()->get();
+                        $uniqueUsers = $users->unique('id');
+                        return $uniqueUsers->pluck('name')->join(', ');
+                    })
+                    ->wrap(),
+
+
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -117,4 +141,6 @@ class ClientResource extends Resource
                 SoftDeletingScope::class,
             ]);
     }
+
+
 }
