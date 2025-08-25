@@ -151,9 +151,6 @@ After installation, run the following commands:
 # Run migrations
 php artisan migrate
 
-# Install Shield
-php artisan shield:install --fresh
-
 # Create super admin user
 php artisan shield:super-admin
 ```
@@ -172,6 +169,13 @@ http://127.0.0.1:8000/panel/shield/roles
 
 Edit the super admin role and select **all permissions**.
 
+```bash
+# if you get 403 then run the following codes
+php artisan shield:generate --all
+php artisan cache:clear
+php artisan shield:super-admin --user=1
+```
+
 ---
 
 ## Notes
@@ -188,7 +192,7 @@ This completes the setup for Laravel with PostgreSQL, Filament, and Shield.
 
 ## Running the Project
 
-After completing all of the setup steps, you need to run the following commands to start the project:
+After completing all of the setup steps, you can restart the project anytime following commands:
 
 ```bash
 # Start Vite for frontend assets
@@ -201,5 +205,4 @@ php artisan serve
 
 If you need to apply or reapply database migrations, run:
 
-```bash
 php artisan migrate
