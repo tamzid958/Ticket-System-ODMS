@@ -13,10 +13,12 @@ class Client extends Model
     protected $fillable = [
         'name',
         'package_id',
+        'discount'
     ];
 
     protected $casts = [
         'package_id' => 'integer',
+        'discount' => 'decimal:10'
     ];
 
     public function package()
