@@ -28,7 +28,6 @@ class Ticket extends Model implements Commentable
         'ticket_weight',
         'holiday_multiplier',
         'timeslot_multiplier',
-        'is_extra',
         'unit_discount',
     ];
 
@@ -43,8 +42,8 @@ class Ticket extends Model implements Commentable
         'ticket_weight' => 'integer',
         'holiday_multiplier' => 'integer',
         'timeslot_multiplier' => 'integer',
-        'is_extra' => 'boolean',
         'unit_discount' => 'integer',
+        
     ];
 
     // Relationships
