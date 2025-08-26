@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
+use App\Support\VersionHelper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -44,10 +44,9 @@ class Package extends Model
         'timings',
     ];
 
-    public function versionedPackage ()
+    public function versionedInstance ()
     {
-        $versionDate = Carbon::now()->startOfMonth();
-
+        $versionDate = VersionHelper::getCostingDate();
         return $this->versionAt($versionDate);
     }
 }
