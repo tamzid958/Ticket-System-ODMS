@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -42,4 +43,11 @@ class Package extends Model
         'weekend_unit_multiplier',
         'timings',
     ];
+
+    public function versionedPackage ()
+    {
+        $versionDate = Carbon::now()->startOfMonth();
+
+        return $this->versionAt($versionDate);
+    }
 }
