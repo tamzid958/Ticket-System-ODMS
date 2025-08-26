@@ -9,12 +9,16 @@ use App\Models\Ticket;
 use Filament\Actions\Action;
 use App\Enums\TicketStatus;
 use Filament\Tables\Filters\Filter;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
+
 class TicketsTable
 {
     public static function configure(Table $table): Table
     {
+        // Store default filter values
+        $defaultMonth = now()->month;
+        $defaultYear = now()->year;
+
         return $table
             ->query(function () {
                 return Ticket::query()
@@ -37,7 +41,7 @@ class TicketsTable
                         $message = $record->getUnitMessage();
                         return $record->unit_value 
                             . ' '
-                            . '<span title="' . e($message) . '" style="display:inline-block; margin-left:0.5rem; color:#9CA3AF; font-size:1.2em; ">&#9432;</span>';
+                            . '<span title="' . e($message) . '" style="display:inline-block; margin-left:0.5rem; color:#9CA3AF; font-size:1.2em;">&#9432;</span>';
                     })
                     ->html()
                     ->sortable(),
@@ -46,8 +50,6 @@ class TicketsTable
                     ->formatStateUsing(fn ($state) => $state ? 'Yes' : 'No')
                     ->sortable(),
             ]))
-
-
             ->filters([
                 Filter::make('month_year')
                     ->form([
@@ -67,26 +69,43 @@ class TicketsTable
                                 11 => 'November',
                                 12 => 'December',
                             ])
-                            ->default(now()->month)
+                            ->default($defaultMonth)
                             ->required(),
 
                         Select::make('year')
                             ->label('Year')
-                            ->options(function () {
-                                $currentYear = now()->year;
-                                return array_combine(range($currentYear, $currentYear - 5), range($currentYear, $currentYear - 5));
+                            ->options(function () use ($defaultYear) {
+                                return array_combine(
+                                    range($defaultYear, $defaultYear - 5),
+                                    range($defaultYear, $defaultYear - 5)
+                                );
                             })
-                            ->default(now()->year)
+                            ->default($defaultYear)
                             ->required(),
                     ])
                     ->query(function ($query, array $data) {
                         if (!empty($data['month']) && !empty($data['year'])) {
                             $query->whereYear('created_at', $data['year'])
-                                ->whereMonth('created_at', $data['month']);
+                                  ->whereMonth('created_at', $data['month']);
                         }
                     }),
             ])
+            ->headerActions([
+          Action::make('download_pdf')
+    ->label('Download PDF')
+    ->icon('heroicon-s-document-arrow-down')
+                    ->url(function (?array $filters = null) use ($defaultMonth, $defaultYear) {
+                        // If filters are provided, use them, otherwise fallback to defaults
+                        $month = $filters['month_year']['data']['month'] ?? $defaultMonth;
+                        $year  = $filters['month_year']['data']['year'] ?? $defaultYear;
 
+                        return route('tickets.pdf', [
+                            'month' => $month,
+                            'year'  => $year,
+                        ]);
+                    })
+                    ->openUrlInNewTab(),
+            ])
             ->recordActions([
                 ViewAction::make(),
                 Action::make('resolve')

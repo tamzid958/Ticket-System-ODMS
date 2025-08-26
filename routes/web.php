@@ -3,10 +3,15 @@
 use Illuminate\Support\Facades\Route;
 use App\Services\IcsHolidayService;
 use Carbon\Carbon;
+use App\Http\Controllers\TicketPdfController;
 
 Route::get('/', function () {
     return redirect('/panel');
 });
+
+// for PDF download
+Route::get('/tickets/pdf', [TicketPdfController::class, 'download'])
+    ->name('tickets.pdf');
 
 // TODO: temporary testing routes, remove later
 Route::get('/api/today-holiday', function () {
