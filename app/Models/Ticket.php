@@ -106,4 +106,18 @@ class Ticket extends Model implements Commentable
         $now = Carbon::now();
         return $query->forMonth($now->year, $now->month);
     }
+
+    public function getUnitMessage(): string
+    {
+        if ($this->is_extra) {
+            return "Exceeds quota. Units: {$this->unit_value}.";
+        }
+
+        if ($this->unit_discount > 0) {
+           return  "Total units: " . ($this->ticket_weight * $this->holiday_multiplier * $this->timeslot_multiplier -$this->unit_discount) ." (Base: {$this->ticket_weight} × Holiday: {$this->holiday_multiplier} × Timeslot: {$this->timeslot_multiplier} - Discount: {$this->unit_discount})";
+        }
+
+        return "Total units: {$this->unit_value} (Base: {$this->ticket_weight} × Holiday: {$this->holiday_multiplier} × Timeslot: {$this->timeslot_multiplier})";
+    }
+
 }
