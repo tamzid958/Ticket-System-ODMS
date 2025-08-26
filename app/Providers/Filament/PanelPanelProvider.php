@@ -39,12 +39,6 @@ class PanelPanelProvider extends PanelProvider
                 Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
-            ->widgets([
-                \App\Filament\Widgets\TicketSummary::class,
-                \App\Filament\Widgets\TicketCostSummary::class,
-            ])
-
-
             ->topNavigation()
             ->middleware([
                 EncryptCookies::class,
