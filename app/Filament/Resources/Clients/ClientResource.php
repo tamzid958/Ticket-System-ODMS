@@ -50,8 +50,26 @@ class ClientResource extends Resource
                 TextInput::make('discount')
                     ->label('Discount')
                     ->numeric()
-                    ->minValue(0)
-                    ->maxValue(100)
+                    ->rules(function (callable $get, $component = null) {
+                        return [
+                            function (string $attribute, $value, \Closure $fail) use ($get, $component) {
+                                $label = $component?->getLabel() ?? $attribute;
+
+                                if ($value < 0) {
+                                    $fail("The {$label} cannot be less than 0.");
+                                    return;
+                                }
+
+                                $packageId = $get('package_id');
+                                if ($packageId) {
+                                    $package = \App\Models\Package::find($packageId);
+                                    if ($package && $value > $package->base_price) {
+                                        $fail("The {$label} cannot be greater than the base price ({$package->base_price}).");
+                                    }
+                                }
+                            },
+                        ];
+                    })
                     ->columnSpanFull(),
                 Select::make('users')
                     ->multiple()
