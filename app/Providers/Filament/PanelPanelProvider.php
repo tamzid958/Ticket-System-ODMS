@@ -19,6 +19,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
 
 class PanelPanelProvider extends PanelProvider
 {
@@ -59,6 +60,9 @@ class PanelPanelProvider extends PanelProvider
             ])
             ->plugins([
                 FilamentShieldPlugin::make(),
+            ])
+            ->plugins([
+                FilamentApexChartsPlugin::make()
             ])
             ->authMiddleware([
                 Authenticate::class,
