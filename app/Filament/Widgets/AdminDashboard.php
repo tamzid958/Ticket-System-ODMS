@@ -88,7 +88,7 @@ class AdminDashboard extends ApexChartWidget
         return [
             'chart' => [
                 'type' => 'bar',
-                'height' => 600,
+                'height' => 400,
             ],
             'series' => [
                 [
@@ -115,7 +115,7 @@ class AdminDashboard extends ApexChartWidget
             'colors' => $colors,
             'plotOptions' => [
                 'bar' => [
-                    'borderRadius' => 3,
+                    'borderRadius' => 5,
                     'horizontal' => false,
                     'distributed' => true,
                 ],

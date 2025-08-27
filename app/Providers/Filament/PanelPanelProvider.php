@@ -45,6 +45,7 @@ class PanelPanelProvider extends PanelProvider
             ->widgets([
                 \App\Filament\Widgets\ClientDashboard::class,
                 \App\Filament\Widgets\AdminDashboard::class,
+                \App\Filament\Widgets\AdminDashboardUnitCount::class,
             ])
             ->topNavigation()
             ->middleware([
