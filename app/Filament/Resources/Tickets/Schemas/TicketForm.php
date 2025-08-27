@@ -10,6 +10,7 @@ use Filament\Forms\Components\Select;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Filament\Forms\Components\DateTimePicker;
 
 class TicketForm
 {
@@ -28,6 +29,13 @@ class TicketForm
                     ->required()
                     ->columnSpanFull()
                     ->extraAttributes(['style' => 'min-height: 300px;']),
+
+                    DateTimePicker::make('created_at')
+    ->label('Created At')
+    ->default(now()) // set current datetime as default
+    ->seconds(false) // no seconds, cleaner
+    ->visible(fn () => Auth::user()->hasRole('super_admin')) // only admin can see
+    ->columnSpanFull(),
 
                 // Ticket Weight (editable only by super_admin)
                 TextInput::make('ticket_weight')

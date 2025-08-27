@@ -59,34 +59,44 @@ class Ticket extends Model implements Commentable
     }
 
     // Boot method for auto-filling fields
-    protected static function booted()
-    {
-        static::creating(function ($ticket) {
-            $user = auth()->user();
+protected static function booted()
+{
+    static::creating(function ($ticket) {
+        $user = auth()->user();
 
-            // Validate user permissions
-            if (!$user->hasRole('client')) {
-                throw new \Exception('Only clients can create tickets.');
-            }
+        // Validate role
+        if (!$user->hasAnyRole(['client', 'super_admin', 'support'])) {
+            throw new \Exception('Only clients, admins, or support can create tickets.');
+        }
+
+        // Always set user_id to the creator
+        $ticket->user_id = $user->id;
+
+        if ($user->hasRole('client')) {
+            // Force client users to their own client_id
             if (!$user->client_id) {
                 throw new \Exception('User does not belong to any client.');
             }
-
-            // Set user and client
-            $ticket->user_id = $user->id;
             $ticket->client_id = $user->client_id;
-
-            // Auto-calculate unit-related fields
-            $ticket->calculateAndSetUnitFields();
-        });
-
-        static::updating(function ($ticket) {
-            // Recalculate unit fields if ticket_weight changes
-            if ($ticket->isDirty('ticket_weight')) {
-                $ticket->calculateAndSetUnitFields();
+        } else {
+            // For admin/support, client_id must come from the form
+            if (empty($ticket->client_id)) {
+                throw new \Exception('Admin must choose a client.');
             }
-        });
-    }
+        }
+
+        // Auto-calculate unit-related fields
+        $ticket->calculateAndSetUnitFields();
+    });
+
+    static::updating(function ($ticket) {
+        // Recalculate unit fields if ticket_weight changes
+        if ($ticket->isDirty('ticket_weight')) {
+            $ticket->calculateAndSetUnitFields();
+        }
+    });
+}
+
 
     /**
      * Calculate and set all unit-related fields
