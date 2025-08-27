@@ -76,8 +76,8 @@ class ClientDashboard extends StatsOverviewWidget
             Stat::make('Extra Units', $extra_units)
                 ->description("For this month"),
                 
-            Stat::make('Monthly bill', $total_monthly_bill)
-                ->description("For {$monthName} [ Pckage price + extra unit price - discount]"),    
+            Stat::make('Monthly bill for {$monthName} ', $total_monthly_bill)
+                ->description("[Pckage price + extra unit price - discount]"),    
 
             ];
         
