@@ -22,6 +22,7 @@ class Ticket extends Model implements Commentable
         'description',
         'status',
         'resolved_at',
+        'resolved_by',       // <-- added
         'is_weekend_unit',
         'is_excess_unit',
         'unit_value',
@@ -35,6 +36,7 @@ class Ticket extends Model implements Commentable
         'user_id' => 'integer',
         'client_id' => 'integer',
         'status' => TicketStatus::class,
+        'resolved_by' => 'integer', // <-- added
         'resolved_at' => 'datetime',
         'is_weekend_unit' => 'boolean',
         'is_excess_unit' => 'boolean',
@@ -49,6 +51,10 @@ class Ticket extends Model implements Commentable
     // Relationships
     public function user() { return $this->belongsTo(User::class); }
     public function client() { return $this->belongsTo(Client::class); }
+    public function resolver()
+    {
+        return $this->belongsTo(User::class, 'resolved_by');
+    }
 
 
     // Boot method for auto-filling fields
