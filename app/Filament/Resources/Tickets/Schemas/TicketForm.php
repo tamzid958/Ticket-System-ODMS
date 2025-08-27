@@ -27,7 +27,8 @@ class TicketForm
         return $get('client_id') ?: Auth::user()->client_id ?: Client::first()?->id;
     }
 
-    protected static function calculateUnitValue($get): ?float
+    // CHANGED: Visibility changed from protected to public to allow calling from CreateTicket page
+    public static function calculateUnitValue($get): ?float
     {
         $ticketWeight = $get('ticket_weight') ?? 1;
         $clientId = self::resolveClientId($get);
@@ -64,7 +65,7 @@ class TicketForm
                 ->label('Created At')
                 ->default(now())
                 ->seconds(false)
-                ->live() // Changed from reactive() to live()
+                ->live()
                 ->visible(fn() => Auth::user()->hasRole('super_admin'))
                 ->afterStateUpdated(function ($state, $set, $get) {
                     // Recalculate unit value when created_at changes
@@ -78,7 +79,7 @@ class TicketForm
                 ->default(1)
                 ->numeric()
                 ->visible(fn() => Auth::user()->hasAnyRole(['super_admin', 'support']))
-                ->live() // Changed from reactive() to live()
+                ->live()
                 ->afterStateUpdated(function ($state, $set, $get) {
                     // Recalculate unit value when ticket weight changes
                     $unitValue = self::calculateUnitValue($get);
@@ -92,7 +93,7 @@ class TicketForm
                 ->options(fn() => Client::pluck('name', 'id'))
                 ->visible(fn() => Auth::user()->hasAnyRole(['super_admin', 'support']))
                 ->required(fn() => Auth::user()->hasAnyRole(['super_admin', 'support']))
-                ->live() // Changed from reactive() to live()
+                ->live()
                 ->afterStateUpdated(function ($state, $set, $get) {
                     // Recalculate unit value when client changes
                     $unitValue = self::calculateUnitValue($get);
@@ -103,10 +104,8 @@ class TicketForm
             // Calculated Unit Value
             TextInput::make('unit_value')
                 ->label('Calculated Unit Value')
-                ->state(function ($get) {
-                    // Use state() instead of default() for dynamic updates
-                    return self::calculateUnitValue($get);
-                })
+                // REMOVED: ->state() which caused the initialization error.
+                // The initial value is now set in the CreateTicket page's mutateFormDataBeforeFill hook.
                 ->disabled()
                 ->dehydrated(false) // Don't include in form data since it's calculated
                 ->hintIcon('heroicon-o-information-circle')
