@@ -50,10 +50,13 @@ class ClientResource extends Resource
                 TextInput::make('discount')
                     ->label('Discount')
                     ->numeric()
+                    ->default(0)
+                    ->dehydrateStateUsing(fn ($state) => $state === null ? 0 : $state)
                     ->rules(function (callable $get, $component = null) {
                         return [
                             function (string $attribute, $value, \Closure $fail) use ($get, $component) {
                                 $label = $component?->getLabel() ?? $attribute;
+                                $value = $value ?? 0;
 
                                 if ($value < 0) {
                                     $fail("The {$label} cannot be less than 0.");
