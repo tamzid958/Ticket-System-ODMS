@@ -7,6 +7,9 @@ use App\Filament\Resources\Tickets\Schemas\TicketForm; // <-- Import TicketForm
 use App\Models\Client;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Auth;
+use App\Mail\SupportMail;
+use App\Models\User;
+use Illuminate\Support\Facades\Mail;
 
 class CreateTicket extends CreateRecord
 {
@@ -32,5 +35,19 @@ class CreateTicket extends CreateRecord
         $data['unit_value'] = TicketForm::calculateUnitValue($get);
 
         return $data;
+    }
+
+    protected function afterCreate(): void
+    {
+        $ticket = $this->record;
+
+        $subject = "New Ticket Created: {$ticket->subject}";
+
+        $supporters = User::role('support')->get();
+
+        foreach ($supporters as $supporter) {
+            Mail::to($supporter->email)
+                ->sendNow(new SupportMail($subject, $ticket));
+        }
     }
 }
