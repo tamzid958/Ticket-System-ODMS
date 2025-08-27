@@ -50,12 +50,42 @@ class Ticket extends Model implements Commentable
     public function user() { return $this->belongsTo(User::class); }
     public function client() { return $this->belongsTo(Client::class); }
 
-    // Boot method
+
+    // Boot method for auto-filling fields
     protected static function booted()
     {
-        static::creating(fn ($ticket) => $ticket->initializeTicket());
-        static::updating(fn ($ticket) => $ticket->updateUnitFieldsIfWeightChanged());
+        static::creating(function ($ticket) {
+            $user = auth()->user();
+
+            // Validate role
+            if (!$user->hasAnyRole(['client', 'super_admin', 'support'])) {
+                throw new \Exception('Only clients, admins, or support can create tickets.');
+            }
+
+            // Always set user_id
+            $ticket->user_id = $user->id;
+
+            if ($user->hasRole('client')) {
+                if (!$user->client_id) {
+                    throw new \Exception('User does not belong to any client.');
+                }
+                $ticket->client_id = $user->client_id;
+            } elseif (empty($ticket->client_id)) {
+                throw new \Exception('Admin/support must choose a client.');
+            }
+
+            // Auto-calculate unit fields
+            $ticket->calculateAndSetUnitFields();
+        });
+
+        static::updating(function ($ticket) {
+            if ($ticket->isDirty('ticket_weight')) {
+                $ticket->calculateAndSetUnitFields();
+            }
+        });
     }
+
+
 
     protected function initializeTicket(): void
     {
@@ -108,7 +138,7 @@ class Ticket extends Model implements Commentable
 
     public function getUnitMessage(): string
     {
-        if ($this->is_extra) {
+        if ($this->is_excess_unit) {
             return "Exceeds quota. Units: {$this->unit_value}.";
         }
 
