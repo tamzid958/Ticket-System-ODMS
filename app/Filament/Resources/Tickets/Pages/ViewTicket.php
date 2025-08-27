@@ -5,6 +5,8 @@ namespace App\Filament\Resources\Tickets\Pages;
 use App\Filament\Resources\Tickets\TicketResource;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ClientMail;
 
 use Filament\Actions\Action;
 use App\Enums\TicketStatus;
@@ -25,6 +27,18 @@ class ViewTicket extends ViewRecord
                         'status' => TicketStatus::CLOSED,
                         'resolved_at' => now(),
                     ]);
+
+                    if ($record->client) {
+                        foreach ($record->client->users as $user) {
+                            if ($user->email) {
+                                Mail::to($user->email)
+                                    ->send(new ClientMail(
+                                        subjectLine: 'ODMS Ticket Resolved: ' . $record->subject,
+                                        ticket: $record
+                                    ));
+                            }
+                        }
+                    }
                 }),
         ];
     }

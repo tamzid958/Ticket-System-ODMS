@@ -16,13 +16,13 @@ class CreateTicket extends CreateRecord
     {
         $ticket = $this->record;
 
-        $subject = "New Ticket Created: {$ticket->subject}";
+        $subject = "ODMS Ticket Creation: {$ticket->subject}";
 
         $supporters = User::role('support')->get();
 
         foreach ($supporters as $supporter) {
             Mail::to($supporter->email)
-                ->sendNow(new SupportMail($subject, $ticket));
+                ->send(new SupportMail($subject, $ticket));
         }
     }
 }
