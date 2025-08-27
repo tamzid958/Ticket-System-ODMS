@@ -72,10 +72,6 @@ class AdminDashboardUnitCount extends ApexChartWidget
                 $extra_units = $monthlyTickets->where('is_excess_unit', true)->count();
                 $used_units = $monthlyTickets->sum('unit_value') - $extra_units;
 
-                $package = $client->package->versionedInstance();
-                $packageName = $package->name ?? 'N/A';
-                $packageLimit = $package->monthly_quota ?? 0;
-
                 $monthly_used_units[] = max($used_units, 0);
 
                 // diff colors for diff clients
