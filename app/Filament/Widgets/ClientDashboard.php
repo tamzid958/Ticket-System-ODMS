@@ -47,6 +47,8 @@ class ClientDashboard extends StatsOverviewWidget
         $packageName = $package->name ?? 'N/A';
         $packageLimit = $package->monthly_quota ?? 0;
 
+        $extra_charge = $extra_units * $package->excess_unit_price;
+
         $base_price = $package->base_price;
         $package_discount = $client->discount;
 
@@ -74,10 +76,10 @@ class ClientDashboard extends StatsOverviewWidget
                 ->color($remainingUnits > 0 ? 'success' : 'danger'),
 
             Stat::make('Extra Units', $extra_units)
-                ->description("For this month"),
+                ->description("{$package->excess_unit_price} per unit:: extra charge: {$extra_charge}"),
                 
             Stat::make("Monthly bill for {$monthName}", $total_monthly_bill)
-                ->description("[Pckage price + extra unit price - discount]"),    
+                ->description("[package price + extra charge - discount]"),    
 
             ];
         

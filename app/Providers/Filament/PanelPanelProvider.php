@@ -19,6 +19,9 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use App\Filament\Widgets\ClientDashboard;
+use App\Filament\Widgets\AdminDashboard;
+use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
 
 class PanelPanelProvider extends PanelProvider
 {
@@ -38,7 +41,11 @@ class PanelPanelProvider extends PanelProvider
             ->pages([
                 Dashboard::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
+            // ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
+            ->widgets([
+                \App\Filament\Widgets\ClientDashboard::class,
+                \App\Filament\Widgets\AdminDashboard::class,
+            ])
             ->topNavigation()
             ->middleware([
                 EncryptCookies::class,
@@ -54,6 +61,7 @@ class PanelPanelProvider extends PanelProvider
             ->plugins([
                 FilamentShieldPlugin::make(),
             ])
+            ->plugins([FilamentApexChartsPlugin::make()])
             ->authMiddleware([
                 Authenticate::class,
             ]);
