@@ -5,30 +5,37 @@ namespace App\Services;
 use App\Models\HolidayIcs;
 use Carbon\Carbon;
 use ICal\ICal;
-use Illuminate\Support\Facades\Http;
 
 class IcsHolidayService
 {
+    private static ?self $instance = null;
     protected ICal $ical;
 
-    public function __construct(int $year = null)
+    private function __construct(int $year = null)
     {
         $year ??= Carbon::now()->year;
         $icsFileContent = $this->getIcsFileForYear($year);
 
-        // TODO: save to temp file because ICal lib needs a file path,
-        // we can delete the file later in the method. need to discuss
         $tempPath = storage_path("temp_holidays_{$year}.ics");
         file_put_contents($tempPath, $icsFileContent);
-        
-       $this->ical = new ICal($tempPath, [
+
+        $this->ical = new ICal($tempPath, [
             'defaultSpan'           => 2,
             'defaultTimeZone'       => 'Asia/Dhaka',
             'defaultWeekStart'      => 'MO',
             'skipRecurrence'        => false,
             'useTimeZoneWithRRules' => true,
         ]);
+    }
 
+    /** Singleton accessor */
+    public static function getInstance(int $year = null): self
+    {
+        if (self::$instance === null) {
+            self::$instance = new self($year);
+        }
+
+        return self::$instance;
     }
 
     /** Get ICS from DB or fallback to env link and save */
@@ -44,7 +51,7 @@ class IcsHolidayService
         $icsContent = file_get_contents($icsUrl);
 
         HolidayIcs::create([
-            'year' => $year,
+            'year'     => $year,
             'ics_file' => $icsContent,
         ]);
 
@@ -65,8 +72,7 @@ class IcsHolidayService
     /** Check if date is holiday (Friday/Saturday automatically counted) */
     public function isHoliday(Carbon $date): bool
     {
-        // Friday/Saturday automatic check
-        if (in_array($date->dayOfWeek, [5, 6])) { // Friday=5, Saturday=6
+        if (in_array($date->dayOfWeek, [5, 6])) {
             return true;
         }
 
