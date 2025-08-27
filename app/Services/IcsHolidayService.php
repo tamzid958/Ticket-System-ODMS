@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\HolidayIcs;
 use Carbon\Carbon;
 use ICal\ICal;
-use Log;
 
 class IcsHolidayService
 {
@@ -26,7 +25,6 @@ class IcsHolidayService
             'useTimeZoneWithRRules' => true,
         ]);
 
-        Log::info('asdadasdadasdads' );
 
         $this->ical->initString($icsFileContent);
 
@@ -76,11 +74,13 @@ class IcsHolidayService
     /** Check if date is holiday (Friday/Saturday automatically counted) */
     public function isHoliday(Carbon $date): bool
     {
+
         if (in_array($date->dayOfWeek, [5, 6])) {
             return true;
         }
 
         $holidays = $this->getHolidays($date->year);
+
 
         return collect($holidays)->contains(fn($holiday) => $holiday['date'] === $date->toDateString());
     }

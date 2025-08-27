@@ -20,7 +20,7 @@ class TicketUnitService
         $ticketTime ??=  Carbon::now();
         $icsService = IcsHolidayService::getInstance($ticketTime->year);
 
-        $isWeekendUnit = in_array($ticketTime->dayOfWeek, [5, 6]) || $icsService->isHoliday($ticketTime);
+        $isWeekendUnit = $icsService->isHoliday($ticketTime);
         $holidayMultiplier = $isWeekendUnit ? $this->package->weekend_unit_multiplier : 1;
         $timeslotMultiplier = $this->getTimeslotMultiplier($ticketTime);
         $unitValue = $ticketWeight * $holidayMultiplier * $timeslotMultiplier;
