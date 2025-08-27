@@ -9,7 +9,7 @@ use App\Models\Ticket;
 use Filament\Actions\Action;
 use App\Enums\TicketStatus;
 use Filament\Tables\Filters\Filter;
-use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Forms\Components\Select;
 class TicketsTable
 {
@@ -22,29 +22,63 @@ class TicketsTable
                         $query->where('client_id', auth()->user()->client_id);
                     })
                     ->orderByRaw("CASE WHEN status = 'open' THEN 1 ELSE 2 END ASC")
+                    ->orderBy('created_at', 'desc')
+
                     ->latest();
             })
             ->columns(array_filter([
-                TextColumn::make('user.name')->sortable(),
-                auth()->user()->client_id ? null : TextColumn::make('client.name')->sortable(),
-                TextColumn::make('subject')->searchable(),
-                TextColumn::make('status')->badge()->sortable(),
-                TextColumn::make('resolved_at')->dateTime()->sortable(),
-                TextColumn::make('created_at')->dateTime()->sortable(),
-                TextColumn::make('unit_value')
-                    ->label('Unit Value')
-                    ->formatStateUsing(function ($record) {
-                        $message = $record->getUnitMessage();
-                        return $record->unit_value 
-                            . ' '
-                            . '<span title="' . e($message) . '" style="display:inline-block; margin-left:0.5rem; color:#9CA3AF; font-size:1.2em; ">&#9432;</span>';
+                TextColumn::make('user.name')
+                    ->label('User')
+                    ->sortable()
+                    ->formatStateUsing(function ($state, $record) {
+                        // $state is user name
+                        if (auth()->user()->hasRole('client')) {
+                            return $state; // just username
+                        }
+                        return $state . ' (' . ($record->client?->name ?? 'No Client') . ')';
+                    }),
+                TextColumn::make('subject')
+                    ->searchable()
+                    ->limit(25)  // truncate to 25 characters
+                    ->tooltip(fn($record) => $record->subject), // optional: full text on hover
+
+                TextColumn::make('created_at')
+                    ->label('Created At')
+                    ->formatStateUsing(function ($state) {
+                        return now()->parse($state)->format('h:i A') . "<br>" . now()->parse($state)->format('Y-m-d');
                     })
                     ->html()
-                    ->sortable(),
-                TextColumn::make('is_excess_unit')
+                    ->sortable(),     
+                TextColumn::make('status')
+                    ->badge()
+                    ->sortable()
+                    ->alignCenter()
+                    ->size('xl') // small, md, lg, xl
+
+                    ->color(function ($state) {
+                        // Handle both enum objects and string values
+                        $value = $state instanceof TicketStatus ? $state->value : $state;
+
+                        return match ($value) {
+                            TicketStatus::CLOSED->value => 'success',   // green
+                            TicketStatus::PENDING->value => 'warning',  // yellow
+                            TicketStatus::OPEN->value => 'danger',      // red
+                            default => 'gray',
+                        };
+                    })
+                    ->extraAttributes([
+                        'class' => 'text-base font-semibold px-4 py-2', // bigger font & padding
+                    ]),
+
+                TextColumn::make('unit_value')
+                    ->label('Unit Value')
+                    ->alignCenter(),
+                IconColumn::make('is_excess_unit') // use IconColumn instead of TextColumn
                     ->label('Excess Unit')
-                    ->formatStateUsing(fn ($state) => $state ? 'Yes' : 'No')
-                    ->sortable(),
+                    ->boolean() // true/false
+                    ->trueIcon('heroicon-o-check') // check icon
+                    ->falseIcon('heroicon-o-x-mark')
+                    ->alignCenter(),               // center the icon
             ]))
 
 
@@ -85,22 +119,8 @@ class TicketsTable
                                 ->whereMonth('created_at', $data['month']);
                         }
                     }),
-            ])
-
-            ->recordActions([
-                ViewAction::make(),
-                Action::make('resolve')
-                    ->label('Resolve')
-                    ->color('success')
-                    ->icon('heroicon-o-check')
-                    ->requiresConfirmation()
-                    ->visible(fn ($record) => $record->status !== TicketStatus::CLOSED)
-                    ->action(function ($record) {
-                        $record->update([
-                            'status' => TicketStatus::CLOSED,
-                            'resolved_at' => now(),
-                        ]);
-                    }),
             ]);
+
+
     }
 }
