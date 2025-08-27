@@ -17,7 +17,7 @@ class TicketUnitService
 
     public function calculateTicketData(int $ticketWeight = 1, ?Carbon $ticketTime = null, ?int $clientId = null): array
     {
-        $ticketTime ??=  Carbon::now('Asia/Dhaka');
+        $ticketTime ??=  Carbon::now();
         $icsService = IcsHolidayService::getInstance($ticketTime->year);
 
         $isWeekendUnit = in_array($ticketTime->dayOfWeek, [5, 6]) || $icsService->isHoliday($ticketTime);
