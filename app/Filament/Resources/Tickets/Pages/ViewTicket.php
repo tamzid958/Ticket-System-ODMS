@@ -3,13 +3,12 @@
 namespace App\Filament\Resources\Tickets\Pages;
 
 use App\Filament\Resources\Tickets\TicketResource;
-use Filament\Actions\EditAction;
+use Filament\Actions\Action;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ClientMail;
-
-use Filament\Actions\Action;
 use App\Enums\TicketStatus;
+
 class ViewTicket extends ViewRecord
 {
     protected static string $resource = TicketResource::class;
@@ -22,10 +21,12 @@ class ViewTicket extends ViewRecord
                 ->color('success')
                 ->icon('heroicon-o-check')
                 ->visible(fn ($record) => $record->status !== TicketStatus::CLOSED)
+                ->requiresConfirmation()
                 ->action(function ($record) {
                     $record->update([
                         'status' => TicketStatus::CLOSED,
                         'resolved_at' => now(),
+                        'resolved_by' => auth()->id(),
                     ]);
 
                     if ($record->client) {

@@ -17,13 +17,12 @@ class TicketUnitService
 
     public function calculateTicketData(int $ticketWeight = 1, ?Carbon $ticketTime = null, ?int $clientId = null): array
     {
-        $ticketTime = $ticketTime ?? Carbon::now('Asia/Dhaka');
+        $ticketTime ??=  Carbon::now();
         $icsService = IcsHolidayService::getInstance($ticketTime->year);
 
         $isWeekendUnit = in_array($ticketTime->dayOfWeek, [5, 6]) || $icsService->isHoliday($ticketTime);
         $holidayMultiplier = $isWeekendUnit ? $this->package->weekend_unit_multiplier : 1;
         $timeslotMultiplier = $this->getTimeslotMultiplier($ticketTime);
-
         $unitValue = $ticketWeight * $holidayMultiplier * $timeslotMultiplier;
         $unitDiscount = $clientId ? $this->calculateUnitDiscount($clientId, $unitValue, $ticketTime) : 0;
         $unitValue -= $unitDiscount;
@@ -44,14 +43,21 @@ class TicketUnitService
     protected function getTimeslotMultiplier(Carbon $ticketTime): float
     {
         foreach ($this->package->timings ?? [] as $slot) {
-            $start = isset($slot['start_time']) ? Carbon::parse($slot['start_time'], 'Asia/Dhaka') : null;
-            $end = isset($slot['end_time']) ? Carbon::parse($slot['end_time'], 'Asia/Dhaka') : null;
+            $start = isset($slot['start_time']) ? Carbon::parse($slot['start_time'], 'Asia/Dhaka')->setDate(
+                $ticketTime->year, $ticketTime->month, $ticketTime->day
+            ) : null;
+            
+            $end = isset($slot['end_time']) ? Carbon::parse($slot['end_time'], 'Asia/Dhaka')->setDate(
+                $ticketTime->year, $ticketTime->month, $ticketTime->day
+            ) : null;
+
             if ($start && $end && $ticketTime->between($start, $end)) {
                 return $slot['multiplier'] ?? 1;
             }
         }
         return 1;
     }
+
 
     protected function calculateUnitDiscount(int $clientId, int $unitValue, Carbon $ticketTime): int
     {
@@ -74,7 +80,6 @@ class TicketUnitService
             ->whereYear('created_at', $ticketTime->year)
             ->whereMonth('created_at', $ticketTime->month)
             ->sum('unit_value');
-
         return ($usage + $unitValue) > $monthlyQuota;
     }
 

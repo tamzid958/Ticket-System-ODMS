@@ -39,7 +39,7 @@ class ClientDashboard extends StatsOverviewWidget
         ->get();
 
         $total_tickets = $monthlyTickets->count();
-        $extra_units = $monthlyTickets->where('is_excess_unit', true)->count();
+        $extra_units = $monthlyTickets->where('is_excess_unit', true)->sum('unit_value');
         $used_units = $monthlyTickets->sum('unit_value') - $extra_units;
         
 
@@ -49,7 +49,6 @@ class ClientDashboard extends StatsOverviewWidget
 
         $base_price = $package->base_price;
         $package_discount = $client->discount;
-
     
         $remainingUnits = max($packageLimit - $used_units, 0);
         $total_monthly_bill = $package->base_price + $extra_units * $package->excess_unit_price - $client->discount;
@@ -76,8 +75,8 @@ class ClientDashboard extends StatsOverviewWidget
             Stat::make('Extra Units', $extra_units)
                 ->description("For this month"),
                 
-            Stat::make('Monthly bill', $total_monthly_bill)
-                ->description("For {$monthName} [ Pckage price + extra unit price - discount]"),    
+            Stat::make("Monthly bill for {$monthName}", $total_monthly_bill)
+                ->description("[Pckage price + extra unit price - discount]"),    
 
             ];
         

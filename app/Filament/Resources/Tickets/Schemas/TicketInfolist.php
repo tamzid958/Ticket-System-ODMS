@@ -6,44 +6,67 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 use Kirschbaum\Commentions\Filament\Infolists\Components\CommentsEntry;
 use Filament\Schemas\Components\Section;
-use Illuminate\Database\Eloquent\Model;
-use App\Models\User;
-use Filament\Schemas\Components\Grid;
 use Illuminate\Support\HtmlString;
+use App\Models\User;
+use Carbon\Carbon;
 
 class TicketInfolist
 {
     public static function configure(Schema $schema): Schema
     {
-       return $schema
-                ->columns(1)
-                ->schema([
-                    // Main Info + Timestamps in two columns
-                    Section::make(fn ($record) => "{$record->subject} #{$record->id} [" . ucfirst($record->status->value) . "]")
-                        ->schema([
-                            TextEntry::make('description')
-                                ->hiddenLabel()
-                                ->formatStateUsing(fn (string $state): HtmlString => new HtmlString($state)),
+        return $schema
+            ->columns(1)
+            ->schema([
+                // Main Info + Timestamps
+                Section::make(fn($record) => "{$record->subject} #{$record->id} [" . ucfirst($record->status->value) . "]")
+                    ->schema([
+                        TextEntry::make('description')
+                            ->hiddenLabel()
+                            ->formatStateUsing(fn(string $state): HtmlString => new HtmlString($state)),
 
-                            TextEntry::make('user.name')
-                                ->hiddenLabel()
-                                ->formatStateUsing(fn ($record) =>
-                                    "Created by {$record->user->name} ({$record->client->name}) - {$record->created_at->diffForHumans()}"
-                            ),
-                        ])
-                        ->columnSpanFull(), // adds space between fields
+                        TextEntry::make('user.name')
+                            ->hiddenLabel()
+                            ->formatStateUsing(function ($state, $record) {
+                                $clientName = $record->client?->name ?? 'N/A';
+                                $createdAt = $record->created_at ? $record->created_at->diffForHumans() : '-';
+                                // $state is user name
+                                if (auth()->user()->hasRole('client')) {
+                                    return "Created by {$state}  - {$createdAt}";
 
-                    // Comments Section
-                    Section::make('Comments')
-                        ->schema([
-                            CommentsEntry::make('comments')
-                                ->mentionables(fn ($record) => User::all())
-                                ->perPage(8)
-                                ->loadMoreIncrementsBy(8)
-                                ->loadMoreLabel('Show older'),
-                        ])
-                        ->columnSpanFull()
-                        ,
-                ]);
+                                }
+                
+
+                                return "Created by {$state} ({$clientName}) - {$createdAt}";
+                            }),
+
+                    ])
+                    ->columnSpanFull(),
+
+                // Resolution Details (only if ticket is closed)
+                Section::make('Resolution Details')
+                    ->visible(fn($record) => $record->status->value === 'closed')
+                    ->schema([
+                        TextEntry::make('resolved_at')
+                            ->label('Resolved At')
+                            ->formatStateUsing(fn($state) => $state ? Carbon::parse($state)->format('h:i A, Y-m-d') : '-'),
+
+                        TextEntry::make('resolver.name')
+                            ->label('Resolved By')
+                            ->formatStateUsing(fn($state) => $state ?: '-'),
+
+                    ])
+                    ->columnSpanFull(),
+
+                // Comments Section
+                Section::make('Comments')
+                    ->schema([
+                        CommentsEntry::make('comments')
+                            ->mentionables(fn($record) => User::all())
+                            ->perPage(8)
+                            ->loadMoreIncrementsBy(8)
+                            ->loadMoreLabel('Show older'),
+                    ])
+                    ->columnSpanFull(),
+            ]);
     }
 }
