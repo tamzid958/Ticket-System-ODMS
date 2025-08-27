@@ -28,7 +28,6 @@ class Ticket extends Model implements Commentable
         'ticket_weight',
         'holiday_multiplier',
         'timeslot_multiplier',
-        'is_extra',
         'unit_discount',
     ];
 
@@ -43,101 +42,81 @@ class Ticket extends Model implements Commentable
         'ticket_weight' => 'integer',
         'holiday_multiplier' => 'integer',
         'timeslot_multiplier' => 'integer',
-        'is_extra' => 'boolean',
         'unit_discount' => 'integer',
+        
     ];
 
     // Relationships
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+    public function user() { return $this->belongsTo(User::class); }
+    public function client() { return $this->belongsTo(Client::class); }
 
-    public function client()
-    {
-        return $this->belongsTo(Client::class);
-    }
-
-    // Boot method for auto-filling fields
+    // Boot method
     protected static function booted()
     {
-        static::creating(function ($ticket) {
-            $user = auth()->user();
-
-            // Validate user permissions
-            if (!$user->hasRole('client')) {
-                throw new \Exception('Only clients can create tickets.');
-            }
-            if (!$user->client_id) {
-                throw new \Exception('User does not belong to any client.');
-            }
-
-            // Set user and client
-            $ticket->user_id = $user->id;
-            $ticket->client_id = $user->client_id;
-
-            // Auto-calculate unit-related fields
-            $ticket->calculateAndSetUnitFields();
-        });
-
-        static::updating(function ($ticket) {
-            // Recalculate unit fields if ticket_weight changes
-            if ($ticket->isDirty('ticket_weight')) {
-                $ticket->calculateAndSetUnitFields();
-            }
-        });
+        static::creating(fn ($ticket) => $ticket->initializeTicket());
+        static::updating(fn ($ticket) => $ticket->updateUnitFieldsIfWeightChanged());
     }
 
-    /**
-     * Calculate and set all unit-related fields
-     */
-    public function calculateAndSetUnitFields()
+    protected function initializeTicket(): void
     {
-        $ticketWeight = $this->ticket_weight ?? 1;
-        $ticketTime = $this->created_at ?? Carbon::now('Asia/Dhaka');
-        
-        // Get client's package (assuming client has a package relationship)
-        $package = $this->client->package ?? Package::first();
-        
-        $unitService = new TicketUnitService($package);
-        $calculatedData = $unitService->calculateTicketData(
-            $ticketWeight, 
-            $ticketTime, 
+        $user = auth()->user();
+        if (!$user->hasRole('client') || !$user->client_id) {
+            throw new \Exception('Only clients can create tickets.');
+        }
+
+        $this->user_id = $user->id;
+        $this->client_id = $user->client_id;
+        $this->calculateAndSetUnitFields();
+    }
+
+    protected function updateUnitFieldsIfWeightChanged(): void
+    {
+        if ($this->isDirty('ticket_weight')) {
+            $this->calculateAndSetUnitFields();
+        }
+    }
+
+    public function calculateAndSetUnitFields(): void
+    {
+        $service = new TicketUnitService($this->client?->package);
+        $data = $service->calculateTicketData(
+            $this->ticket_weight ?? 1,
+            $this->created_at ?? Carbon::now('Asia/Dhaka'),
             $this->client_id
         );
 
-        // Set all the calculated fields
-        $this->unit_value = $calculatedData['unit_value'];
-        $this->holiday_multiplier = $calculatedData['holiday_multiplier'];
-        $this->timeslot_multiplier = $calculatedData['timeslot_multiplier'];
-        $this->is_weekend_unit = $calculatedData['is_weekend_unit'];
-        $this->is_excess_unit = $calculatedData['is_excess_unit'];
-        $this->unit_discount = $calculatedData['unit_discount'];
+        foreach ($data as $key => $value) {
+            $this->$key = $value;
+        }
     }
 
-    /**
-     * Get the effective unit value (after discount)
-     */
     public function getEffectiveUnitValueAttribute(): int
     {
         return max(0, $this->unit_value - $this->unit_discount);
     }
 
-    /**
-     * Scope to get tickets for a specific month
-     */
     public function scopeForMonth($query, int $year, int $month)
     {
-        return $query->whereYear('created_at', $year)
-                    ->whereMonth('created_at', $month);
+        return $query->whereYear('created_at', $year)->whereMonth('created_at', $month);
     }
 
-    /**
-     * Scope to get tickets for current month
-     */
     public function scopeCurrentMonth($query)
     {
         $now = Carbon::now();
         return $query->forMonth($now->year, $now->month);
     }
+
+    public function getUnitMessage(): string
+    {
+        if ($this->is_extra) {
+            return "Exceeds quota. Units: {$this->unit_value}.";
+        }
+
+        if ($this->unit_discount > 0) {
+           return  "Total units: " . ($this->ticket_weight * $this->holiday_multiplier * $this->timeslot_multiplier -$this->unit_discount) ." (Base: {$this->ticket_weight} × Holiday: {$this->holiday_multiplier} × Timeslot: {$this->timeslot_multiplier} - Discount: {$this->unit_discount})";
+        }
+
+        return "Total units: {$this->unit_value} (Base: {$this->ticket_weight} × Holiday: {$this->holiday_multiplier} × Timeslot: {$this->timeslot_multiplier})";
+    }
+
 }
