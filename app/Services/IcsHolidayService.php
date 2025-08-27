@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\HolidayIcs;
 use Carbon\Carbon;
 use ICal\ICal;
+use Log;
 
 class IcsHolidayService
 {
@@ -16,16 +17,19 @@ class IcsHolidayService
         $year ??= Carbon::now()->year;
         $icsFileContent = $this->getIcsFileForYear($year);
 
-        $tempPath = storage_path("temp_holidays_{$year}.ics");
-        file_put_contents($tempPath, $icsFileContent);
 
-        $this->ical = new ICal($tempPath, [
-            'defaultSpan'           => 2,
-            'defaultTimeZone'       => 'Asia/Dhaka',
-            'defaultWeekStart'      => 'MO',
-            'skipRecurrence'        => false,
+        $this->ical = new ICal(false, [
+            'defaultSpan' => 2,
+            'defaultTimeZone' => 'Asia/Dhaka',
+            'defaultWeekStart' => 'MO',
+            'skipRecurrence' => false,
             'useTimeZoneWithRRules' => true,
         ]);
+
+        Log::info('asdadasdadasdads' );
+
+        $this->ical->initString($icsFileContent);
+
     }
 
     /** Singleton accessor */
@@ -51,7 +55,7 @@ class IcsHolidayService
         $icsContent = file_get_contents($icsUrl);
 
         HolidayIcs::create([
-            'year'     => $year,
+            'year' => $year,
             'ics_file' => $icsContent,
         ]);
 
@@ -65,7 +69,7 @@ class IcsHolidayService
 
         return collect($events)->map(fn($event) => [
             'summary' => $event->summary,
-            'date'    => Carbon::parse($event->dtstart_array[3])->toDateString(),
+            'date' => Carbon::parse($event->dtstart_array[3])->toDateString(),
         ])->toArray();
     }
 
@@ -78,6 +82,6 @@ class IcsHolidayService
 
         $holidays = $this->getHolidays($date->year);
 
-        return collect($holidays)->contains(fn ($holiday) => $holiday['date'] === $date->toDateString());
+        return collect($holidays)->contains(fn($holiday) => $holiday['date'] === $date->toDateString());
     }
 }
