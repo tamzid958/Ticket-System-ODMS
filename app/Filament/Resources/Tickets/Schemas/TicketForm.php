@@ -103,7 +103,8 @@ class TicketForm
             // Calculated Unit Value
             TextInput::make('unit_value')
                 ->label('Calculated Unit Value')
-                ->default(function ($get) {
+                ->state(function ($get) {
+                    // Use state() instead of default() for dynamic updates
                     return self::calculateUnitValue($get);
                 })
                 ->disabled()

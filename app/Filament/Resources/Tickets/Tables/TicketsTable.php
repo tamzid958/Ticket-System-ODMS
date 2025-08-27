@@ -48,16 +48,7 @@ class TicketsTable
                         return now()->parse($state)->format('h:i A') . "<br>" . now()->parse($state)->format('Y-m-d');
                     })
                     ->html()
-                    ->sortable(),
-                TextColumn::make('resolved_at')
-                    ->label('Resolved At')
-                    ->formatStateUsing(function ($state) {
-                        if (!$state)
-                            return '-';
-                        return now()->parse($state)->format('h:i A') . "<br>" . now()->parse($state)->format('Y-m-d');
-                    })
-                    ->html(),         // allow <br> for line break
-
+                    ->sortable(),     
                 TextColumn::make('status')
                     ->badge()
                     ->sortable()
