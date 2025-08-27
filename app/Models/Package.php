@@ -47,6 +47,10 @@ class Package extends Model
     public function versionedInstance ()
     {
         $versionDate = VersionHelper::getCostingDate();
-        return $this->versionAt($versionDate);
+        $package = $this->versionAt($versionDate);
+        if(!$package){
+             $package = $this;
+        }
+        return $package;
     }
 }

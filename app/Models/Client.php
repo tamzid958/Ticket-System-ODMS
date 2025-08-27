@@ -50,6 +50,10 @@ class Client extends Model
     public function versionedInstance ()
     {
         $versionDate = VersionHelper::getCostingDate();
-        return $this->versionAt($versionDate);
+        $client = $this->versionAt($versionDate);
+        if(!$client){
+             $client = $this;
+        }
+        return $client;
     }
 }

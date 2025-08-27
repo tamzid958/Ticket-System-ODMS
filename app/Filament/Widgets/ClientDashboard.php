@@ -21,7 +21,7 @@ class ClientDashboard extends StatsOverviewWidget
     protected function getStats(): array
     {
         $user = Auth::user();
-        $client = $user->client;
+        $client = $user->client->versionedInstance();
         
         if(!$client){
                 return [
@@ -43,7 +43,7 @@ class ClientDashboard extends StatsOverviewWidget
         $used_units = $monthlyTickets->sum('unit_value') - $discount_units;
         
 
-        $package = $client->package;
+        $package = $client->package->versionedInstance();
         $packageName = $package->name ?? 'N/A';
         $packageLimit = $package->monthly_quota ?? 0;
 
