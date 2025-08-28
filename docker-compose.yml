@@ -8,6 +8,8 @@ services:
         restart: unless-stopped
         ports:
             - "${APP_PORT}:8000"
+        volumes:
+            - ~/tts_app_data:/app/storage/app/public
         depends_on:
             - db
 
