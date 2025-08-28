@@ -89,7 +89,7 @@ class AdminDashboardUnitCount extends ApexChartWidget
             ],
             'series' => [
                 [
-                    'name' => 'BasicBarChart',
+                    'name' => 'Used Unit',
                     'data' => $monthly_used_units,
                 ],
             ],
