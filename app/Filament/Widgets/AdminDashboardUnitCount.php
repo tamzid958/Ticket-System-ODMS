@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Ticket;
 use App\Models\Client;
 use Carbon\Carbon;
+use App\Utils\AppUtil;
 
 class AdminDashboardUnitCount extends ApexChartWidget
 {
@@ -71,7 +72,7 @@ class AdminDashboardUnitCount extends ApexChartWidget
             $monthly_used_units[] = max($used_units, 0);
 
             // deterministic color based on client ID
-            $colors[] = sprintf("#%06X", crc32($client->id) & 0xFFFFFF);
+            $colors[] = AppUtil::generateColorCode((string)$client->name);
         }
 
         return [
