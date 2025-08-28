@@ -66,6 +66,7 @@ class TicketForm
                 ->fileAttachmentsDisk('public')
                 ->fileAttachmentsDirectory('ticket-attachments')
                 ->fileAttachmentsVisibility('public'),
+
             // Admin-only fields with their `afterStateUpdated` hooks are correct
             DateTimePicker::make('created_at')
                 ->label('Created At')
