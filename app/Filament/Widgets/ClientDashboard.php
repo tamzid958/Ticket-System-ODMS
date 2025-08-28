@@ -75,7 +75,7 @@ class ClientDashboard extends StatsOverviewWidget
                 ->color($remainingUnits > 0 ? 'success' : 'danger'),
 
             Stat::make('Extra Units', $extra_units)
-                ->description("{$package->excess_unit_price} per unit:: extra charge: {$extra_charge}"),
+                ->description("Per unit: {$package->excess_unit_price} | Extra charge: {$extra_charge}"),
                 
             Stat::make("Monthly bill for {$monthName}", $total_monthly_bill)
                 ->description("[package price + extra charge - discount]"),    

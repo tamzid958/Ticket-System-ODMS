@@ -54,7 +54,7 @@ class AdminDashboard extends ApexChartWidget
             $colors = [];
 
             foreach ($clients as $client) {
-                // $client = $client->$client->versionedInstance();
+                $client = $client->versionedInstance();
                 $clientNames[] = $client->name;
 
                 $monthlyTickets = Ticket::query()
