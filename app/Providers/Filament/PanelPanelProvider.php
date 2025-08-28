@@ -33,6 +33,7 @@ class PanelPanelProvider extends PanelProvider
             ->id('panel')
             ->path('panel')
             ->login()
+            ->globalSearch(false)
             ->colors([
                 'primary' => Color::Amber,
             ])

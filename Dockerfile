@@ -19,27 +19,27 @@ RUN apt-get update && apt-get install -y \
 
 # Install Node.js (you can change to 18.x or 20.x if needed)
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y nodejs    
+    && apt-get install -y nodejs
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
+COPY package.json package-lock.json ./
+RUN npm install
+
 COPY . .
 
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
-RUN composer install
-RUN npm install
 RUN npm run build
 
-# Expose ports:
-# - 8000 for Laravel (php artisan serve)
-# - 5173 for Vite (default HMR port)
-EXPOSE 8000 5173
+RUN php artisan clear-compiled
+RUN php artisan optimize
 
 RUN chmod +x /app/entrypoint.sh
 ENTRYPOINT ["/app/entrypoint.sh"]
 
-# Start both servers
+# Start both serverss
 CMD ["sh", "-c", "php artisan serve --host=0.0.0.0 --port=8000"]
