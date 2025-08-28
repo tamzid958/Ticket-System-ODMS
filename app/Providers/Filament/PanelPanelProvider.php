@@ -19,17 +19,24 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use App\Filament\Widgets\ClientDashboard;
+use App\Filament\Widgets\AdminDashboard;
+use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
+use App\Filament\Pages\Auth\EditProfile;
 
 class PanelPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
         return $panel
+            ->profile(EditProfile::class)
             ->default()
             ->spa()
             ->id('panel')
             ->path('panel')
             ->login()
+            ->passwordReset()
+            ->globalSearch(false)
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -38,7 +45,12 @@ class PanelPanelProvider extends PanelProvider
             ->pages([
                 Dashboard::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
+            // ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
+            ->widgets([
+                ClientDashboard::class,
+                AdminDashboard::class,
+                \App\Filament\Widgets\AdminDashboardUnitCount::class,
+            ])
             ->topNavigation()
             ->middleware([
                 EncryptCookies::class,
@@ -54,6 +66,8 @@ class PanelPanelProvider extends PanelProvider
             ->plugins([
                 FilamentShieldPlugin::make(),
             ])
+
+            ->plugins([FilamentApexChartsPlugin::make()])
             ->authMiddleware([
                 Authenticate::class,
             ]);

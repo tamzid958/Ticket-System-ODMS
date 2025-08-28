@@ -9,6 +9,7 @@ use App\Models\Ticket;
 use Filament\Actions\Action;
 use App\Enums\TicketStatus;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Forms\Components\Select;
 
 class TicketsTable
@@ -26,35 +27,73 @@ class TicketsTable
                         $query->where('client_id', auth()->user()->client_id);
                     })
                     ->orderByRaw("CASE WHEN status = 'open' THEN 1 ELSE 2 END ASC")
+                    ->orderBy('created_at', 'desc')
+
                     ->latest();
             })
             ->columns(array_filter([
-                TextColumn::make('user.name')->sortable(),
-                auth()->user()->client_id ? null : TextColumn::make('client.name')->sortable(),
-                TextColumn::make('subject')->searchable(),
-                TextColumn::make('status')->badge()->sortable(),
-                TextColumn::make('resolved_at')->dateTime()->sortable(),
-                TextColumn::make('created_at')->dateTime()->sortable(),
-                TextColumn::make('unit_value')
-                    ->label('Unit Value')
-                    ->formatStateUsing(function ($record) {
-                        $message = $record->getUnitMessage();
-                        return $record->unit_value 
-                            . ' '
-                            . '<span title="' . e($message) . '" style="display:inline-block; margin-left:0.5rem; color:#9CA3AF; font-size:1.2em;">&#9432;</span>';
+
+                TextColumn::make('user.name')
+                    ->label('User')
+                    ->sortable()
+                    ->formatStateUsing(function ($state, $record) {
+                        // $state is user name
+                        if (auth()->user()->hasRole('client')) {
+                            return $state; // just username
+                        }
+                        return $state . ' (' . ($record->client?->name ?? 'No Client') . ')';
+                    }),
+                TextColumn::make('subject')
+                    ->searchable()
+                    ->limit(25)  // truncate to 25 characters
+                    ->tooltip(fn($record) => $record->subject), // optional: full text on hover
+
+                TextColumn::make('created_at')
+                    ->label('Created At')
+                    ->formatStateUsing(function ($state) {
+                        return now()->parse($state)->format('Y-m-d') . "<br>" . now()->parse($state)->format('h:i A');
                     })
                     ->html()
                     ->sortable(),
-                TextColumn::make('is_excess_unit')
+                TextColumn::make('status')
+                    ->badge()
+                    ->sortable()
+                    ->alignCenter()
+                    ->size('xl') // small, md, lg, xl
+
+                    ->color(function ($state) {
+                        // Handle both enum objects and string values
+                        $value = $state instanceof TicketStatus ? $state->value : $state;
+
+                        return match ($value) {
+                            TicketStatus::CLOSED->value => 'success',   // green
+                            TicketStatus::PENDING->value => 'warning',  // yellow
+                            TicketStatus::OPEN->value => 'danger',      // red
+                            default => 'gray',
+                        };
+                    })
+                    ->extraAttributes([
+                        'class' => 'text-base font-semibold px-4 py-2', // bigger font & padding
+                    ]),
+
+                TextColumn::make('unit_value')
+                    ->label('Unit Value')
+                    ->alignCenter(),
+                IconColumn::make('is_excess_unit') // use IconColumn instead of TextColumn
                     ->label('Excess Unit')
-                    ->formatStateUsing(fn ($state) => $state ? 'Yes' : 'No')
-                    ->sortable(),
+                    ->boolean() // true/false
+                    ->trueIcon('heroicon-o-check') // check icon
+                    ->falseIcon('heroicon-o-x-mark')
+                    ->alignCenter(),               // center the icon
             ]))
-            ->filters([
-                Filter::make('month_year')
+
+
+            ->filters(array_filter([
+                // Date range filter
+                Filter::make('date_range')
                     ->form([
-                        Select::make('month')
-                            ->label('Month')
+                        Select::make('from_month')
+                            ->label('From Month')
                             ->options([
                                 1 => 'January',
                                 2 => 'February',
@@ -69,57 +108,62 @@ class TicketsTable
                                 11 => 'November',
                                 12 => 'December',
                             ])
-                            ->default($defaultMonth)
+                            ->default(now()->month)
                             ->required(),
 
-                        Select::make('year')
-                            ->label('Year')
-                            ->options(function () use ($defaultYear) {
-                                return array_combine(
-                                    range($defaultYear, $defaultYear - 5),
-                                    range($defaultYear, $defaultYear - 5)
-                                );
-                            })
-                            ->default($defaultYear)
+                        Select::make('from_year')
+                            ->label('From Year')
+                            ->options(fn() => array_combine(range(now()->year, now()->year - 5), range(now()->year, now()->year - 5)))
+                            ->default(now()->year)
                             ->required(),
+
+                        Select::make('to_month')
+                            ->label('To Month')
+                            ->options([
+                                1 => 'January',
+                                2 => 'February',
+                                3 => 'March',
+                                4 => 'April',
+                                5 => 'May',
+                                6 => 'June',
+                                7 => 'July',
+                                8 => 'August',
+                                9 => 'September',
+                                10 => 'October',
+                                11 => 'November',
+                                12 => 'December',
+                            ])
+                            ->default(now()->month)
+                            ->required(),
+
+                        Select::make('to_year')
+                            ->label('To Year')
+                            ->options(fn() => array_combine(range(now()->year, now()->year - 5), range(now()->year, now()->year - 5)))
+                            ->default(now()->year)
+                            ->required(),
+
+                        // Only show client filter for admins
+                        auth()->user()->client_id === null
+                        ? Select::make('client_id')
+                            ->label('Client')
+                            ->options(\App\Models\Client::pluck('name', 'id')->toArray())
+                            ->searchable()
+                        : null,
                     ])
                     ->query(function ($query, array $data) {
-                        if (!empty($data['month']) && !empty($data['year'])) {
-                            $query->whereYear('created_at', $data['year'])
-                                  ->whereMonth('created_at', $data['month']);
+                        if (!empty($data['from_month']) && !empty($data['from_year']) && !empty($data['to_month']) && !empty($data['to_year'])) {
+                            $from = \Carbon\Carbon::createFromDate($data['from_year'], $data['from_month'], 1)->startOfMonth();
+                            $to = \Carbon\Carbon::createFromDate($data['to_year'], $data['to_month'], 1)->endOfMonth();
+                            $query->whereBetween('created_at', [$from, $to]);
+                        }
+
+                        if (!empty($data['client_id'])) {
+                            $query->where('client_id', $data['client_id']);
                         }
                     }),
-            ])
-            ->headerActions([
-          Action::make('download_pdf')
-    ->label('Download PDF')
-    ->icon('heroicon-s-document-arrow-down')
-                    ->url(function (?array $filters = null) use ($defaultMonth, $defaultYear) {
-                        // If filters are provided, use them, otherwise fallback to defaults
-                        $month = $filters['month_year']['data']['month'] ?? $defaultMonth;
-                        $year  = $filters['month_year']['data']['year'] ?? $defaultYear;
+            ]));
 
-                        return route('tickets.pdf', [
-                            'month' => $month,
-                            'year'  => $year,
-                        ]);
-                    })
-                    ->openUrlInNewTab(),
-            ])
-            ->recordActions([
-                ViewAction::make(),
-                Action::make('resolve')
-                    ->label('Resolve')
-                    ->color('success')
-                    ->icon('heroicon-o-check')
-                    ->requiresConfirmation()
-                    ->visible(fn ($record) => $record->status !== TicketStatus::CLOSED)
-                    ->action(function ($record) {
-                        $record->update([
-                            'status' => TicketStatus::CLOSED,
-                            'resolved_at' => now(),
-                        ]);
-                    }),
-            ]);
+
+
     }
 }

@@ -13,7 +13,16 @@ use Carbon\Carbon;
 
 class Ticket extends Model implements Commentable
 {
+  
     use HasFactory, SoftDeletes, HasComments;
+
+    /**
+     * Tell Eloquent to stop managing timestamps automatically.
+     * We will manage them ourselves in the booted method.
+     *
+     * @var bool
+     */
+    public $timestamps = false; // <-- STEP 1: Add this line
 
     protected $fillable = [
         'user_id',
@@ -22,6 +31,7 @@ class Ticket extends Model implements Commentable
         'description',
         'status',
         'resolved_at',
+        'resolved_by',
         'is_weekend_unit',
         'is_excess_unit',
         'unit_value',
@@ -29,12 +39,15 @@ class Ticket extends Model implements Commentable
         'holiday_multiplier',
         'timeslot_multiplier',
         'unit_discount',
+        'created_at', // <-- STEP 2: Add created_at and updated_at to fillable
+        'updated_at',
     ];
 
     protected $casts = [
         'user_id' => 'integer',
         'client_id' => 'integer',
         'status' => TicketStatus::class,
+        'resolved_by' => 'integer',
         'resolved_at' => 'datetime',
         'is_weekend_unit' => 'boolean',
         'is_excess_unit' => 'boolean',
@@ -43,19 +56,63 @@ class Ticket extends Model implements Commentable
         'holiday_multiplier' => 'integer',
         'timeslot_multiplier' => 'integer',
         'unit_discount' => 'integer',
-        
+        'created_at' => 'datetime', // <-- STEP 3: Ensure timestamps are cast to datetime
+        'updated_at' => 'datetime',
     ];
-
     // Relationships
     public function user() { return $this->belongsTo(User::class); }
     public function client() { return $this->belongsTo(Client::class); }
+    public function resolver()
+    {
+        return $this->belongsTo(User::class, 'resolved_by');
+    }
 
-    // Boot method
+
+    // Boot method for auto-filling fields
     protected static function booted()
     {
-        static::creating(fn ($ticket) => $ticket->initializeTicket());
-        static::updating(fn ($ticket) => $ticket->updateUnitFieldsIfWeightChanged());
+        // STEP 4: Modify the booted method to handle timestamps manually
+        static::creating(function ($ticket) {
+            $user = auth()->user();
+
+            // Validate role
+            if (!$user->hasAnyRole(['client', 'super_admin', 'support'])) {
+                throw new \Exception('Only clients, admins, or support can create tickets.');
+            }
+
+            // Always set user_id
+            $ticket->user_id = $user->id;
+
+            if ($user->hasRole('client')) {
+                if (!$user->client_id) {
+                    throw new \Exception('User does not belong to any client.');
+                }
+                $ticket->client_id = $user->client_id;
+            } elseif (empty($ticket->client_id)) {
+                throw new \Exception('Admin/support must choose a client.');
+            }
+            
+            // Set timestamps manually. If created_at is not already set by the admin form, default to now().
+            $ticket->created_at ??= now();
+            $ticket->updated_at = now();
+
+
+            // Auto-calculate unit fields
+            // This now correctly uses the created_at value from the form
+            $ticket->calculateAndSetUnitFields();
+        });
+
+        static::updating(function ($ticket) {
+            // Always set updated_at on update
+            $ticket->updated_at = now();
+            
+            if ($ticket->isDirty('ticket_weight', 'created_at')) { // Also recalculate if created_at changes on edit
+                $ticket->calculateAndSetUnitFields();
+            }
+        });
     }
+
+
 
     protected function initializeTicket(): void
     {
@@ -78,10 +135,11 @@ class Ticket extends Model implements Commentable
 
     public function calculateAndSetUnitFields(): void
     {
+        // This method is now correct, because $this->created_at will have the right value
         $service = new TicketUnitService($this->client?->package);
         $data = $service->calculateTicketData(
             $this->ticket_weight ?? 1,
-            $this->created_at ?? Carbon::now('Asia/Dhaka'),
+            $this->created_at, // No need for the `?? now()` fallback anymore
             $this->client_id
         );
 
@@ -108,7 +166,7 @@ class Ticket extends Model implements Commentable
 
     public function getUnitMessage(): string
     {
-        if ($this->is_extra) {
+        if ($this->is_excess_unit) {
             return "Exceeds quota. Units: {$this->unit_value}.";
         }
 

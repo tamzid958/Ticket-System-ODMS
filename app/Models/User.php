@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Permission\Traits\HasRoles;
 use Kirschbaum\Commentions\Contracts\Commenter;
+use App\Notifications\CustomResetPassword;
 
 class User extends Authenticatable implements Commenter
 {
@@ -54,5 +55,10 @@ class User extends Authenticatable implements Commenter
      public function client()
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new CustomResetPassword($token));
     }
 }
