@@ -22,17 +22,20 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 use App\Filament\Widgets\ClientDashboard;
 use App\Filament\Widgets\AdminDashboard;
 use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
+use App\Filament\Pages\Auth\EditProfile;
 
 class PanelPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
         return $panel
+            ->profile(EditProfile::class)
             ->default()
             ->spa()
             ->id('panel')
             ->path('panel')
             ->login()
+            ->passwordReset()
             ->globalSearch(false)
             ->colors([
                 'primary' => Color::Amber,
@@ -44,8 +47,8 @@ class PanelPanelProvider extends PanelProvider
             ])
             // ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
-                \App\Filament\Widgets\ClientDashboard::class,
-                \App\Filament\Widgets\AdminDashboard::class,
+                ClientDashboard::class,
+                AdminDashboard::class,
                 \App\Filament\Widgets\AdminDashboardUnitCount::class,
             ])
             ->topNavigation()
@@ -63,6 +66,7 @@ class PanelPanelProvider extends PanelProvider
             ->plugins([
                 FilamentShieldPlugin::make(),
             ])
+
             ->plugins([FilamentApexChartsPlugin::make()])
             ->authMiddleware([
                 Authenticate::class,

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Ticket;
 use App\Models\Client;
 use Carbon\Carbon;
+use App\Utils\AppUtil;
 
 class AdminDashboard extends ApexChartWidget
 {
@@ -17,6 +18,11 @@ class AdminDashboard extends ApexChartWidget
      */
     protected static ?string $chartId = 'adminDashboard';
 
+    /**
+     * Disable automatic widget polling (optional)
+     */
+protected ?string $pollingInterval = null;
+
     public function getHeading(): ?string
     {
         $now = Carbon::now('Asia/Dhaka');
@@ -24,13 +30,6 @@ class AdminDashboard extends ApexChartWidget
 
         return "Monthly bill for clients [{$monthYear}]";
     }
-
-    /**
-     * Chart options (series, labels, types, size, animations...)
-     * https://apexcharts.com/docs/options
-     *
-     * @return array
-     */
 
     public static function canView(): bool
     {
@@ -45,45 +44,35 @@ class AdminDashboard extends ApexChartWidget
 
     protected function getOptions(): array
     {
+        $now = Carbon::now('Asia/Dhaka');
 
-            $now = Carbon::now('Asia/Dhaka');
-            $clients = Client::with('package')->get();
+        // Stable ordering by ID ensures colors stay consistent
+        $clients = Client::with('package')->orderBy('id')->get();
 
-            $clientNames = [];
-            $monthlyBills = [];
-            $colors = [];
+        $clientNames = [];
+        $monthlyBills = [];
+        $colors = [];
 
-            foreach ($clients as $client) {
-                $client = $client->versionedInstance();
-                $clientNames[] = $client->name;
+        foreach ($clients as $client) {
+            $client = $client->versionedInstance();
+            $clientNames[] = $client->name;
 
-                $monthlyTickets = Ticket::query()
+            $monthlyTickets = Ticket::query()
                 ->where('client_id', $client->id)
                 ->whereMonth('created_at', $now->month)
                 ->whereYear('created_at', $now->year)
                 ->get();
 
-                $total_tickets = $monthlyTickets->count();
-                $extra_units = $monthlyTickets->where('is_excess_unit', true)->count();
-                $used_units = $monthlyTickets->sum('unit_value');
+            $extra_units = $monthlyTickets->where('is_excess_unit', true)->count();
 
-                $package = $client->package->versionedInstance();
-                $packageName = $package->name ?? 'N/A';
-                $packageLimit = $package->monthly_quota ?? 0;
+            $package = $client->package->versionedInstance();
 
+            $total_monthly_bill = $package->base_price + $extra_units * $package->excess_unit_price - $client->discount;
+            $monthlyBills[] = max($total_monthly_bill, 0);
 
-                $total_monthly_bill = $package->base_price + $extra_units * $package->excess_unit_price - $client->discount;
-
-                $monthlyBills[] = max($total_monthly_bill, 0);
-
-                // diff colors for diff clients
-                $hue = rand(0, 360);          
-                $saturation = rand(50, 90);
-                $lightness = rand(40, 70);
-                $colors[] = "hsl($hue, $saturation%, $lightness%)";
-
-            }
-
+            // Deterministic color per client ID
+            $colors[] = AppUtil::generateColorCode((string)$client->id);
+        }
 
         return [
             'chart' => [
@@ -97,11 +86,11 @@ class AdminDashboard extends ApexChartWidget
                 ],
             ],
             'xaxis' => [
-                    'categories' => $clientNames,
-                    'labels' => [
+                'categories' => $clientNames,
+                'labels' => [
                     'style' => [
-                    'fontFamily' => 'inherit',
-                    'fontWeight' => 600,
+                        'fontFamily' => 'inherit',
+                        'fontWeight' => 600,
                     ],
                 ],
             ],
@@ -117,10 +106,9 @@ class AdminDashboard extends ApexChartWidget
                 'bar' => [
                     'borderRadius' => 5,
                     'horizontal' => false,
-                    'distributed' => true,
+                    'distributed' => true, // one color per bar
                 ],
             ],
-
         ];
     }
 }
