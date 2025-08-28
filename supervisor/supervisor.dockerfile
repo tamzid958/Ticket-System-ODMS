@@ -31,7 +31,7 @@ WORKDIR /var/www/html
 
 COPY . .
 
-RUN composer install
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
 # Run Supervisor
 CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
