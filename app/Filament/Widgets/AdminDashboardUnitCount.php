@@ -18,6 +18,13 @@ class AdminDashboardUnitCount extends ApexChartWidget
     protected static ?string $chartId = 'adminDashboardUnitCount';
 
     /**
+     * Disable polling / auto-refresh
+     *
+     * @var string|null
+     */
+    protected ?string $pollingInterval = null;
+
+    /**
      * Widget Title
      *
      * @var string|null
@@ -30,15 +37,6 @@ class AdminDashboardUnitCount extends ApexChartWidget
         return "Monthly used units for clients [{$monthYear}]";
     }
 
-    /**
-     * Chart options (series, labels, types, size, animations...)
-     * https://apexcharts.com/docs/options
-     *
-     * @return array
-     */
-
-
-
     public static function canView(): bool
     {
         $user = Auth::user();
@@ -49,38 +47,32 @@ class AdminDashboardUnitCount extends ApexChartWidget
     {
         return 'full';
     }
+
     protected function getOptions(): array
     {
         $now = Carbon::now('Asia/Dhaka');
-            $clients = Client::with('package')->get();
+        $clients = Client::with('package')->orderBy('name')->get();
 
-            $clientNames = [];
-            $monthly_used_units = [];
-            $colors = [];
+        $clientNames = [];
+        $monthly_used_units = [];
+        $colors = [];
 
-            foreach ($clients as $client) {
-                $client = $client->versionedInstance();
-                $clientNames[] = $client->name;
+        foreach ($clients as $client) {
+            $client = $client->versionedInstance();
+            $clientNames[] = $client->name;
 
-                $monthlyTickets = Ticket::query()
+            $monthlyTickets = Ticket::query()
                 ->where('client_id', $client->id)
                 ->whereMonth('created_at', $now->month)
                 ->whereYear('created_at', $now->year)
                 ->get();
 
-                $total_tickets = $monthlyTickets->count();
-                $extra_units = $monthlyTickets->where('is_excess_unit', true)->count();
-                $used_units = $monthlyTickets->sum('unit_value');
+            $used_units = $monthlyTickets->sum('unit_value');
+            $monthly_used_units[] = max($used_units, 0);
 
-                $monthly_used_units[] = max($used_units, 0);
-
-                // diff colors for diff clients
-                $hue = rand(0, 360);          
-                $saturation = rand(50, 90);
-                $lightness = rand(40, 70);
-                $colors[] = "hsl($hue, $saturation%, $lightness%)";
-
-            }
+            // deterministic color based on client ID
+            $colors[] = sprintf("#%06X", crc32($client->id) & 0xFFFFFF);
+        }
 
         return [
             'chart' => [
