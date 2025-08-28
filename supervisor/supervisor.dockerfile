@@ -28,6 +28,7 @@ RUN mkdir -p /etc/supervisor/conf.d
 COPY supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 WORKDIR /var/www/html
+RUN git config --global --add safe.directory /var/www/html
 
 COPY . .
 
