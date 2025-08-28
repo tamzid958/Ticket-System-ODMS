@@ -24,22 +24,29 @@ class TicketForm
 
     protected static function resolveClientId($get): ?int
     {
-        return $get('client_id') ?: Auth::user()->client_id ?: Client::first()?->id;
+        $user = Auth::user();
+
+        if (auth()->user()->client_id === null) {
+            return $get('client_id');
+        }
+
+        return $user->client_id;
     }
 
-    // CHANGED: Visibility changed from protected to public to allow calling from CreateTicket page
     public static function calculateUnitValue($get): ?float
     {
         $ticketWeight = $get('ticket_weight') ?? 1;
         $clientId = self::resolveClientId($get);
-        if (!$clientId)
+
+        if (!$clientId) {
             return null;
+        }
 
         $service = self::resolveService($clientId);
-        if (!$service)
+        if (!$service) {
             return null;
+        }
 
-        // Use selected datetime
         $createdAt = $get('created_at') ?? now();
         $message = $service->getUnitMessage($ticketWeight, Carbon::parse($createdAt), $clientId);
         return $service->extractTotalUnitsFromUnitMessage($message);
@@ -48,66 +55,52 @@ class TicketForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-
-            // Subject
-            TextInput::make('subject')
-                ->required()
-                ->maxLength(255)
-                ->columnSpanFull(),
-
-            // Description
-            RichEditor::make('description')
+            TextInput::make('subject')->required()->maxLength(255)->columnSpanFull(),
+         RichEditor::make('description')
                 ->required()
                 ->columnSpanFull()
-                ->extraAttributes(['style' => 'min-height: 300px;']),
-            
+                ->extraAttributes(['style' => 'min-height: 300px;'])
+                ->fileAttachmentsDisk('public')
+                ->fileAttachmentsDirectory('ticket-attachments')
+                ->fileAttachmentsVisibility('public'),
+
             DateTimePicker::make('created_at')
                 ->label('Created At')
-                ->default(now())
+                ->default(Carbon::now('Asia/Dhaka'))
                 ->seconds(false)
                 ->live()
-                ->visible(fn() => Auth::user()->hasRole('super_admin'))
-                ->afterStateUpdated(function ($state, $set, $get) {
-                    // Recalculate unit value when created_at changes
-                    $unitValue = self::calculateUnitValue($get);
-                    $set('unit_value', $unitValue);
+                ->timezone('Asia/Dhaka')  
+                ->visible(fn () => Auth::user()->client_id === null)
+                ->afterStateUpdated(function ($set, $get) {
+                    $set('unit_value', self::calculateUnitValue($get));
                 })
                 ->columnSpanFull(),
 
-            // Ticket Weight (editable only by super_admin)
-            TextInput::make('ticket_weight')
-                ->default(1)
-                ->numeric()
-                ->visible(fn() => Auth::user()->hasAnyRole(['super_admin', 'support']))
-                ->live()
-                ->afterStateUpdated(function ($state, $set, $get) {
-                    // Recalculate unit value when ticket weight changes
-                    $unitValue = self::calculateUnitValue($get);
-                    $set('unit_value', $unitValue);
-                })
-                ->columnSpanFull(),
+            TextInput::make('ticket_weight')->default(1)->numeric()->live()
+                ->visible(fn() => Auth::user()->client_id === null)
+                ->afterStateUpdated(function ($set, $get) {
+                    $set('unit_value', self::calculateUnitValue($get));
+                })->columnSpanFull(),
 
-            // Client select (only for super_admin and support)
-            Select::make('client_id')
-                ->label('Client')
-                ->options(fn() => Client::pluck('name', 'id'))
-                ->visible(fn() => Auth::user()->hasAnyRole(['super_admin', 'support']))
-                ->required(fn() => Auth::user()->hasAnyRole(['super_admin', 'support']))
-                ->live()
-                ->afterStateUpdated(function ($state, $set, $get) {
-                    // Recalculate unit value when client changes
-                    $unitValue = self::calculateUnitValue($get);
-                    $set('unit_value', $unitValue);
-                })
-                ->columnSpanFull(),
+            Select::make('client_id')->label('Client')->options(fn() => Client::pluck('name', 'id'))->live()
+                ->visible(fn() =>Auth::user()->client_id === null)
+                ->required(fn() => Auth::user()->client_id === null)
+                ->afterStateUpdated(function ($set, $get) {
+                    $set('unit_value', self::calculateUnitValue($get));
+                })->columnSpanFull(),
 
-            // Calculated Unit Value
+
             TextInput::make('unit_value')
                 ->label('Calculated Unit Value')
-                // REMOVED: ->state() which caused the initialization error.
-                // The initial value is now set in the CreateTicket page's mutateFormDataBeforeFill hook.
                 ->disabled()
-                ->dehydrated(false) // Don't include in form data since it's calculated
+                ->dehydrated(false)
+                ->default(function ($get) {
+                    $user = Auth::user();
+                    if ($user->hasRole('client') && $user->client_id) {
+                        return self::calculateUnitValue($get) ?? 0;
+                    }
+                    return null;
+                })
                 ->hintIcon('heroicon-o-information-circle')
                 ->hintIconTooltip(function ($get) {
                     $ticketWeight = $get('ticket_weight') ?? 1;
@@ -123,6 +116,7 @@ class TicketForm
                     return $service->getUnitMessage($ticketWeight, Carbon::parse($createdAt), $clientId);
                 })
                 ->columnSpanFull(),
+
         ]);
     }
 }

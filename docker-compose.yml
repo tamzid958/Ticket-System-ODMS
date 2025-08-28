@@ -5,14 +5,18 @@ services:
         build:
             context: .
         container_name: tts-odms
+        restart: unless-stopped
         ports:
             - "${APP_PORT}:8000"
+        volumes:
+            - ~/tts_app_data:/app/storage/app/public
         depends_on:
             - db
 
     db:
         image: postgres:latest
         container_name: tts_db
+        restart: unless-stopped
         environment:
             POSTGRES_DB: ${DB_DATABASE}
             POSTGRES_USER: ${DB_USERNAME}
@@ -21,3 +25,12 @@ services:
             - "5432:5432"
         volumes:
             - ~/tts_db_data:/var/lib/postgresql/data
+
+    supervisor:
+        build:
+            context: .
+            dockerfile: supervisor/supervisor.dockerfile
+        container_name: supervisor
+        restart: unless-stopped
+        depends_on:
+            -   db
