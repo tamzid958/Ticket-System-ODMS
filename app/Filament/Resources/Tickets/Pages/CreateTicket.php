@@ -10,8 +10,6 @@ use App\Models\Package;
 use App\Services\TicketUnitService;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Auth;
-use App\Mail\SupportMail;
-use App\Models\User;
 use App\Enums\MailStatus;
 use Illuminate\Support\Facades\Mail;
 
