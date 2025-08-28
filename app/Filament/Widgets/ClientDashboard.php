@@ -40,7 +40,7 @@ class ClientDashboard extends StatsOverviewWidget
 
         $total_tickets = $monthlyTickets->count();
         $extra_units = $monthlyTickets->where('is_excess_unit', true)->sum('unit_value');
-        $used_units = $monthlyTickets->sum('unit_value') - $extra_units;
+        $used_units = $monthlyTickets->sum('unit_value');
         
 
         $package = $client->package->versionedInstance();

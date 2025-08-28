@@ -70,7 +70,7 @@ class AdminDashboardUnitCount extends ApexChartWidget
 
                 $total_tickets = $monthlyTickets->count();
                 $extra_units = $monthlyTickets->where('is_excess_unit', true)->count();
-                $used_units = $monthlyTickets->sum('unit_value') - $extra_units;
+                $used_units = $monthlyTickets->sum('unit_value');
 
                 $monthly_used_units[] = max($used_units, 0);
 

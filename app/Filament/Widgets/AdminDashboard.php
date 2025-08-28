@@ -65,7 +65,7 @@ class AdminDashboard extends ApexChartWidget
 
                 $total_tickets = $monthlyTickets->count();
                 $extra_units = $monthlyTickets->where('is_excess_unit', true)->count();
-                $used_units = $monthlyTickets->sum('unit_value') - $extra_units;
+                $used_units = $monthlyTickets->sum('unit_value');
 
                 $package = $client->package->versionedInstance();
                 $packageName = $package->name ?? 'N/A';
