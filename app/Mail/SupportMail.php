@@ -41,6 +41,7 @@ class SupportMail extends Mailable implements ShouldQueue
                 'ticketTitle'     => $this->ticket->subject,
                 'ticketDescription'=> $this->ticket->description,
                 'createdAt'       => $this->ticket->created_at->format('d M Y, H:i'),
+                'ticketUrl' => config('app.url') . '/panel/tickets/' . $this->ticket->id
             ]
         );
     }
