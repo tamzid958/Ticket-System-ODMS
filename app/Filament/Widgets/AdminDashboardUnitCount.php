@@ -51,7 +51,7 @@ class AdminDashboardUnitCount extends ApexChartWidget
     protected function getOptions(): array
     {
         $now = Carbon::now('Asia/Dhaka');
-        $clients = Client::with('package')->get();
+        $clients = Client::with('package')->orderBy('name')->get();
 
         $clientNames = [];
         $monthly_used_units = [];

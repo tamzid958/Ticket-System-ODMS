@@ -47,7 +47,7 @@ protected ?string $pollingInterval = null;
         $now = Carbon::now('Asia/Dhaka');
 
         // Stable ordering by ID ensures colors stay consistent
-        $clients = Client::with('package')->orderBy('id')->get();
+        $clients = Client::with('package')->orderBy('name')->get();
 
         $clientNames = [];
         $monthlyBills = [];
