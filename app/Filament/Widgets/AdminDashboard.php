@@ -71,7 +71,7 @@ protected ?string $pollingInterval = null;
             $monthlyBills[] = max($total_monthly_bill, 0);
 
             // Deterministic color per client ID
-            $colors[] = AppUtil::generateColorCode((string)$client->id);
+            $colors[] = AppUtil::generateColorCode((string)$client->name);
         }
 
         return [
