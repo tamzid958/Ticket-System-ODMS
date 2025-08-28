@@ -58,7 +58,13 @@ class TicketForm
         return $schema->components([
             // ... subject and description fields are unchanged ...
             TextInput::make('subject')->required()->maxLength(255)->columnSpanFull(),
-            RichEditor::make('description')->required()->columnSpanFull()->extraAttributes(['style' => 'min-height: 300px;']),
+            RichEditor::make('description')
+                ->required()
+                ->columnSpanFull()
+                ->extraAttributes(['style' => 'min-height: 300px;'])
+                ->fileAttachmentsDisk('public')           // Use the public disk
+                ->fileAttachmentsDirectory('tickets')     // Store in storage/app/public/tickets
+                ->fileAttachmentsVisibility('public'),  // Make them web accessible
 
             // Admin-only fields with their `afterStateUpdated` hooks are correct
             DateTimePicker::make('created_at')->label('Created At')->default(now())->seconds(false)->live()

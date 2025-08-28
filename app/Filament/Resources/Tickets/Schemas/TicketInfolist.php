@@ -9,6 +9,7 @@ use Filament\Schemas\Components\Section;
 use Illuminate\Support\HtmlString;
 use App\Models\User;
 use Carbon\Carbon;
+use Filament\Infolists\Components\Html;
 
 class TicketInfolist
 {
@@ -21,9 +22,31 @@ class TicketInfolist
                 Section::make(fn($record) => "{$record->subject} #{$record->id} [" . ucfirst($record->status->value) . "]")
                     ->schema([
                         TextEntry::make('description')
-                            ->hiddenLabel()
-                            ->formatStateUsing(fn(string $state): HtmlString => new HtmlString($state)),
+                        ->hiddenLabel()
+                        ->html() // Allow raw HTML rendering
+                        ->formatStateUsing(function (?string $state): string {
+                            if (!$state) return '';
 
+                            $state = preg_replace_callback(
+                                '/src="([^"]+)"/i',
+                                function ($matches) {
+                                    $src = $matches[1];
+
+                                    if (str_starts_with($src, 'http')) {
+                                        return 'src="' . $src . '"';
+                                    }
+
+                                    if (str_starts_with($src, 'storage')) {
+                                        return 'src="' . asset($src) . '"';
+                                    }
+
+                                    return 'src="' . asset('storage/' . ltrim($src, '/')) . '"';
+                                },
+                                $state
+                            );
+
+                            return $state;
+                        }),
                         TextEntry::make('user.name')
                             ->hiddenLabel()
                             ->formatStateUsing(function ($state, $record) {
