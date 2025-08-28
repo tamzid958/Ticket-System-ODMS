@@ -9,6 +9,7 @@ use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Auth;
 use App\Mail\SupportMail;
 use App\Models\User;
+use App\Enums\MailStatus;
 use Illuminate\Support\Facades\Mail;
 
 class CreateTicket extends CreateRecord
@@ -46,8 +47,14 @@ class CreateTicket extends CreateRecord
         $supporters = User::role('support')->get();
 
         foreach ($supporters as $supporter) {
+            \App\Models\Mail::create([
+                'user_id' => $supporter->id,
+                'ticket_id' => $ticket->id,
+                'status' => MailStatus::SENT,
+            ]);
+
             Mail::to($supporter->email)
-                ->send(new SupportMail($subject, $ticket));
+                ->queue(new SupportMail($subject, $ticket));
         }
     }
 }
