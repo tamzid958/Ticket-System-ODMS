@@ -27,7 +27,7 @@ class TicketForm
     {
         $user = Auth::user();
 
-        if ($user->hasAnyRole(['super_admin', 'support'])) {
+        if (auth()->user()->client_id === null) {
             return $get('client_id');
         }
 
@@ -58,24 +58,36 @@ class TicketForm
         return $schema->components([
             // ... subject and description fields are unchanged ...
             TextInput::make('subject')->required()->maxLength(255)->columnSpanFull(),
-            RichEditor::make('description')->required()->columnSpanFull()->extraAttributes(['style' => 'min-height: 300px;']),
-
+         RichEditor::make('description')
+                ->required()
+                ->columnSpanFull()
+                ->extraAttributes(['style' => 'min-height: 300px;'])
+                // Add these three lines to handle file attachments:
+                ->fileAttachmentsDisk('public')
+                ->fileAttachmentsDirectory('ticket-attachments')
+                ->fileAttachmentsVisibility('public'),
             // Admin-only fields with their `afterStateUpdated` hooks are correct
-            DateTimePicker::make('created_at')->label('Created At')->default(now())->seconds(false)->live()
-                ->visible(fn() => Auth::user()->hasRole('super_admin'))
+            DateTimePicker::make('created_at')
+                ->label('Created At')
+                ->default(Carbon::now('Asia/Dhaka'))
+                ->seconds(false)
+                ->live()
+                ->timezone('Asia/Dhaka')   // 👈 Add this
+                ->visible(fn () => Auth::user()->client_id === null)
                 ->afterStateUpdated(function ($set, $get) {
                     $set('unit_value', self::calculateUnitValue($get));
-                })->columnSpanFull(),
+                })
+                ->columnSpanFull(),
 
             TextInput::make('ticket_weight')->default(1)->numeric()->live()
-                ->visible(fn() => Auth::user()->hasAnyRole(['super_admin', 'support']))
+                ->visible(fn() => Auth::user()->client_id === null)
                 ->afterStateUpdated(function ($set, $get) {
                     $set('unit_value', self::calculateUnitValue($get));
                 })->columnSpanFull(),
 
             Select::make('client_id')->label('Client')->options(fn() => Client::pluck('name', 'id'))->live()
-                ->visible(fn() => Auth::user()->hasAnyRole(['super_admin', 'support']))
-                ->required(fn() => Auth::user()->hasAnyRole(['super_admin', 'support']))
+                ->visible(fn() =>Auth::user()->client_id === null)
+                ->required(fn() => Auth::user()->client_id === null)
                 ->afterStateUpdated(function ($set, $get) {
                     $set('unit_value', self::calculateUnitValue($get));
                 })->columnSpanFull(),

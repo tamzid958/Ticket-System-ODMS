@@ -45,7 +45,7 @@ class TicketsTable
                 TextColumn::make('created_at')
                     ->label('Created At')
                     ->formatStateUsing(function ($state) {
-                        return now()->parse($state)->format('h:i A') . "<br>" . now()->parse($state)->format('Y-m-d');
+                        return  now()->parse($state)->format('Y-m-d'). "<br>" .  now()->parse($state)->format('h:i A') ;
                     })
                     ->html()
                     ->sortable(),     
