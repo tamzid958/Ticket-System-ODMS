@@ -36,12 +36,13 @@ class ViewTicket extends ViewRecord
                                 \App\Models\Mail::create([
                                     'user_id' => $user->id,
                                     'ticket_id' => $record->id,
-                                    'status' => MailStatus::SENT,
+                                    'status' => MailStatus::PENDING,
                                 ]);
                                 Mail::to($user->email)
                                     ->queue(new ClientMail(
                                         subjectLine: 'ODMS Ticket Resolved: ' . $record->subject,
-                                        ticket: $record
+                                        ticket: $record,
+                                        userId: $user->id
                                     ));
                             }
                         }

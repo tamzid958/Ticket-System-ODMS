@@ -50,11 +50,11 @@ class CreateTicket extends CreateRecord
             \App\Models\Mail::create([
                 'user_id' => $supporter->id,
                 'ticket_id' => $ticket->id,
-                'status' => MailStatus::SENT,
+                'status' => MailStatus::PENDING,
             ]);
 
             Mail::to($supporter->email)
-                ->queue(new SupportMail($subject, $ticket));
+                ->queue(new SupportMail($subject, $ticket, $supporter->id));
         }
     }
 }
