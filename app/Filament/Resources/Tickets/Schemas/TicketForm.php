@@ -22,7 +22,6 @@ class TicketForm
         return $package ? new TicketUnitService($package) : null;
     }
 
-    // This role-aware logic is correct and necessary for the dynamic updates.
     protected static function resolveClientId($get): ?int
     {
         $user = Auth::user();
@@ -56,24 +55,21 @@ class TicketForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            // ... subject and description fields are unchanged ...
             TextInput::make('subject')->required()->maxLength(255)->columnSpanFull(),
          RichEditor::make('description')
                 ->required()
                 ->columnSpanFull()
                 ->extraAttributes(['style' => 'min-height: 300px;'])
-                // Add these three lines to handle file attachments:
                 ->fileAttachmentsDisk('public')
                 ->fileAttachmentsDirectory('ticket-attachments')
                 ->fileAttachmentsVisibility('public'),
 
-            // Admin-only fields with their `afterStateUpdated` hooks are correct
             DateTimePicker::make('created_at')
                 ->label('Created At')
                 ->default(Carbon::now('Asia/Dhaka'))
                 ->seconds(false)
                 ->live()
-                ->timezone('Asia/Dhaka')   // 👈 Add this
+                ->timezone('Asia/Dhaka')  
                 ->visible(fn () => Auth::user()->client_id === null)
                 ->afterStateUpdated(function ($set, $get) {
                     $set('unit_value', self::calculateUnitValue($get));
@@ -103,7 +99,7 @@ class TicketForm
                     if ($user->hasRole('client') && $user->client_id) {
                         return self::calculateUnitValue($get) ?? 0;
                     }
-                    return null; // For admins, starts as null until they select things
+                    return null;
                 })
                 ->hintIcon('heroicon-o-information-circle')
                 ->hintIconTooltip(function ($get) {
