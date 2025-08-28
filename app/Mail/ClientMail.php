@@ -8,44 +8,46 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use App\Models\Ticket;
 
-class ClientMail extends Mailable
+class ClientMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    /**
-     * Create a new message instance.
-     */
-    public function __construct()
+    public string $subjectLine;
+    public Ticket $ticket;
+
+    public function __construct(string $subjectLine, Ticket $ticket)
     {
-        //
+        $this->subjectLine = $subjectLine;
+        $this->ticket = $ticket;
     }
 
-    /**
-     * Get the message envelope.
-     */
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Token Creation Confirmation (DSi)',
+            subject: $this->subjectLine,
         );
     }
 
-    /**
-     * Get the message content definition.
-     */
     public function content(): Content
     {
         return new Content(
-            view: 'emails.client',
+            view: 'mail.client',
+            with: [
+                'clientName'      => $this->ticket->client->name ?? 'Unknown',
+                'clientId'        => $this->ticket->client_id,
+                'creatorName'     => $this->ticket->user->name ?? 'Unknown',
+                'ticketTitle'     => $this->ticket->subject,
+                'ticketDescription'=> $this->ticket->description,
+                'createdAt'       => $this->ticket->created_at->format('d M Y, H:i'),
+                'resolvedAt'      => $this->ticket->resolved_at?->format('d M Y, H:i') ?? now()->format('d M Y, H:i'),
+                'ticketUrl'       => config('app.url') . '/panel/tickets/' . $this->ticket->id,
+            ]
         );
     }
 
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
+
     public function attachments(): array
     {
         return [];

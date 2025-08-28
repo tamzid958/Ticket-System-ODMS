@@ -3,13 +3,11 @@
 namespace App\Filament\Resources\Tickets\Pages;
 
 use App\Filament\Resources\Tickets\TicketResource;
-use App\Filament\Resources\Tickets\Schemas\TicketForm;
 use App\Mail\SupportMail;
 use App\Models\User;
 use App\Models\Client;
 use App\Models\Package;
 use App\Services\TicketUnitService;
-use Carbon\Carbon;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
@@ -48,12 +46,15 @@ class CreateTicket extends CreateRecord
     protected function afterCreate(): void
     {
         $ticket = $this->record;
-        $subject = "New Ticket Created: {$ticket->subject} [#{$ticket->id}]";
+
+
+        $subject = "ODMS Ticket Creation: {$ticket->subject}";
+
         $supporters = User::role('support')->get();
 
         foreach ($supporters as $supporter) {
             Mail::to($supporter->email)
-                ->queue(new SupportMail($subject, $ticket));
+                ->send(new SupportMail($subject, $ticket));
         }
     }
 }
