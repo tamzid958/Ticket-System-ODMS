@@ -11,6 +11,8 @@ use App\Enums\TicketStatus;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Forms\Components\Select;
+use Carbon\Carbon;
+use Filament\Notifications\Notification;
 
 class TicketsTable
 {
@@ -86,6 +88,57 @@ class TicketsTable
                     ->falseIcon('heroicon-o-x-mark')
                     ->alignCenter(),               // center the icon
             ]))
+            ->headerActions([
+                Action::make('downloadReport')
+                    ->label('Download PDF')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('primary')
+                    // The action is now a URL that opens in a new tab
+                    ->url(function ($livewire): string {
+                        // 1. Get filter data
+                        $filters = $livewire->tableFilters['date_range'] ?? [];
+
+                        // 2. Determine Client ID
+                        $clientId = auth()->user()->client_id;
+                        if ($clientId === null) {
+                            $clientId = $filters['client_id'] ?? null;
+                        }
+
+                        // Return a placeholder URL if client is not selected by admin
+                        if (!$clientId) {
+                            return '#';
+                        }
+
+                        // 3. Determine date range
+                        $fromYear = $filters['from_year'] ?? now()->year;
+                        $fromMonth = $filters['from_month'] ?? now()->month;
+                        $toYear = $filters['to_year'] ?? now()->year;
+                        $toMonth = $filters['to_month'] ?? now()->month;
+
+                        $fromDate = Carbon::create($fromYear, $fromMonth, 1)->format('Y-m-d');
+                        $toDate = Carbon::create($toYear, $toMonth, 1)->endOfMonth()->format('Y-m-d');
+
+                        // 4. Generate the route
+                        return route('reports.tickets.download', [
+                            'client' => $clientId,
+                            'from_date' => $fromDate,
+                            'to_date' => $toDate,
+                        ]);
+                    })
+                    ->openUrlInNewTab()
+                    // Add a click handler to prevent navigation if no client is selected
+                    ->action(function (Action $action) {
+                        if ($action->getUrl() === '#') {
+                             Notification::make()
+                                ->title('Client Not Selected')
+                                ->body('Please select a client from the filters to generate a report.')
+                                ->danger()
+                                ->send();
+                            // This stops the action from trying to navigate
+                            $action->halt();
+                        }
+                    }),
+            ])
 
 
             ->filters(array_filter([
