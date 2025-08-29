@@ -21,8 +21,8 @@ class TicketReportController extends Controller
             return response('Client package not found.', 404);
         }
 
-    $fromDate = Carbon::create($year, $month, 1)->startOfMonth();
-    $toDate = $fromDate->copy()->endOfMonth();
+        $fromDate = Carbon::create($year, $month, 1)->startOfMonth();
+        $toDate = $fromDate->copy()->endOfMonth();
 
         $tickets = Ticket::where('client_id', $client->id)
             ->whereBetween('created_at', [$fromDate, $toDate])
@@ -32,9 +32,9 @@ class TicketReportController extends Controller
         $regularTickets = $tickets->where('is_excess_unit', false);
         $excessTickets = $tickets->where('is_excess_unit', true);
 
-$totalPackageAmount = $client->package->base_price; 
+        $totalPackageAmount = $client->package->base_price;
         $totalExcessAmount = $excessTickets->sum('unit_value');
-$grandTotal = $totalPackageAmount + $totalExcessAmount;
+        $grandTotal = $totalPackageAmount + $totalExcessAmount;
 
         $data = compact(
             'client',
