@@ -94,42 +94,25 @@ class TicketsTable
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('primary')
                     // The action is now a URL that opens in a new tab
-                    ->url(function ($livewire): string {
-                        // 1. Get filter data
-                        $filters = $livewire->tableFilters['date_range'] ?? [];
+->url(function ($livewire): string {
+    $month = $livewire->tableFilters['month']['month'] ?? now()->month;
+    $year = $livewire->tableFilters['month']['year'] ?? now()->year;
 
-                        // 2. Determine Client ID
-                        $clientId = auth()->user()->client_id;
-                        if ($clientId === null) {
-                            $clientId = $filters['client_id'] ?? null;
-                        }
+    $clientId = auth()->user()->client_id ?? ($livewire->tableFilters['month']['client_id'] ?? null);
+    if (!$clientId) return '#';
 
-                        // Return a placeholder URL if client is not selected by admin
-                        if (!$clientId) {
-                            return '#';
-                        }
+    return route('reports.tickets.download', [
+        'client' => $clientId,
+        'year' => $year,      // pass only year number
+        'month' => $month,    // pass only month number
+    ]);
+})
 
-                        // 3. Determine date range
-                        $fromYear = $filters['from_year'] ?? now()->year;
-                        $fromMonth = $filters['from_month'] ?? now()->month;
-                        $toYear = $filters['to_year'] ?? now()->year;
-                        $toMonth = $filters['to_month'] ?? now()->month;
-
-                        $fromDate = Carbon::create($fromYear, $fromMonth, 1)->format('Y-m-d');
-                        $toDate = Carbon::create($toYear, $toMonth, 1)->endOfMonth()->format('Y-m-d');
-
-                        // 4. Generate the route
-                        return route('reports.tickets.download', [
-                            'client' => $clientId,
-                            'from_date' => $fromDate,
-                            'to_date' => $toDate,
-                        ]);
-                    })
                     ->openUrlInNewTab()
                     // Add a click handler to prevent navigation if no client is selected
                     ->action(function (Action $action) {
                         if ($action->getUrl() === '#') {
-                             Notification::make()
+                            Notification::make()
                                 ->title('Client Not Selected')
                                 ->body('Please select a client from the filters to generate a report.')
                                 ->danger()
@@ -141,80 +124,62 @@ class TicketsTable
             ])
 
 
-            ->filters(array_filter([
-                // Date range filter
-                Filter::make('date_range')
-                    ->form([
-                        Select::make('from_month')
-                            ->label('From Month')
-                            ->options([
-                                1 => 'January',
-                                2 => 'February',
-                                3 => 'March',
-                                4 => 'April',
-                                5 => 'May',
-                                6 => 'June',
-                                7 => 'July',
-                                8 => 'August',
-                                9 => 'September',
-                                10 => 'October',
-                                11 => 'November',
-                                12 => 'December',
-                            ])
-                            ->default(now()->month)
-                            ->required(),
+            ->filters(
+                array_filter([
+                    // Date range filter
 
-                        Select::make('from_year')
-                            ->label('From Year')
-                            ->options(fn() => array_combine(range(now()->year, now()->year - 5), range(now()->year, now()->year - 5)))
-                            ->default(now()->year)
-                            ->required(),
+                    Filter::make('month')
+                        ->form([
+                            Select::make('month')
+                                ->label('Month')
+                                ->options([
+                                    1 => 'January',
+                                    2 => 'February',
+                                    3 => 'March',
+                                    4 => 'April',
+                                    5 => 'May',
+                                    6 => 'June',
+                                    7 => 'July',
+                                    8 => 'August',
+                                    9 => 'September',
+                                    10 => 'October',
+                                    11 => 'November',
+                                    12 => 'December',
+                                ])
+                                ->default(now()->month)
+                                ->required(),
 
-                        Select::make('to_month')
-                            ->label('To Month')
-                            ->options([
-                                1 => 'January',
-                                2 => 'February',
-                                3 => 'March',
-                                4 => 'April',
-                                5 => 'May',
-                                6 => 'June',
-                                7 => 'July',
-                                8 => 'August',
-                                9 => 'September',
-                                10 => 'October',
-                                11 => 'November',
-                                12 => 'December',
-                            ])
-                            ->default(now()->month)
-                            ->required(),
+                            Select::make('year')
+                                ->label('Year')
+                                ->options(fn() => array_combine(
+                                    range(now()->year, now()->year - 5),
+                                    range(now()->year, now()->year - 5)
+                                ))
+                                ->default(now()->year)
+                                ->required(),
 
-                        Select::make('to_year')
-                            ->label('To Year')
-                            ->options(fn() => array_combine(range(now()->year, now()->year - 5), range(now()->year, now()->year - 5)))
-                            ->default(now()->year)
-                            ->required(),
+                            // Show client selector only to admins
+                            auth()->user()->client_id === null
+                            ? Select::make('client_id')
+                                ->label('Client')
+                                ->options(\App\Models\Client::pluck('name', 'id')->toArray())
+                                ->searchable()
+                            : null,
+                        ])
+                        ->query(function ($query, array $data) {
+                            if (!empty($data['month']) && !empty($data['year'])) {
+                                $from = Carbon::create($data['year'], $data['month'], 1)->startOfMonth();
+                                $to = $from->copy()->endOfMonth();
+                                $query->whereBetween('created_at', [$from, $to]);
+                            }
 
-                        // Only show client filter for admins
-                        auth()->user()->client_id === null
-                        ? Select::make('client_id')
-                            ->label('Client')
-                            ->options(\App\Models\Client::pluck('name', 'id')->toArray())
-                            ->searchable()
-                        : null,
-                    ])
-                    ->query(function ($query, array $data) {
-                        if (!empty($data['from_month']) && !empty($data['from_year']) && !empty($data['to_month']) && !empty($data['to_year'])) {
-                            $from = \Carbon\Carbon::createFromDate($data['from_year'], $data['from_month'], 1)->startOfMonth();
-                            $to = \Carbon\Carbon::createFromDate($data['to_year'], $data['to_month'], 1)->endOfMonth();
-                            $query->whereBetween('created_at', [$from, $to]);
-                        }
+                            if (!empty($data['client_id'])) {
+                                $query->where('client_id', $data['client_id']);
+                            }
+                        })
+                ])
 
-                        if (!empty($data['client_id'])) {
-                            $query->where('client_id', $data['client_id']);
-                        }
-                    }),
-            ]));
+            );
 
 
 

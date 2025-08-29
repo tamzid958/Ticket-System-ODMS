@@ -11,9 +11,8 @@ Route::get('/', function () {
 
 
 Route::middleware('auth')->group(function () {
-    // Other authenticated routes...
+// Correct route
+Route::get('/reports/tickets/{client}/{year}/{month}', [TicketReportController::class, 'download'])
+    ->name('reports.tickets.download');
 
-    // Add this new route for the ticket report
-    Route::get('/reports/tickets/{client}/{from_date}/{to_date}', [TicketReportController::class, 'download'])
-        ->name('reports.tickets.download');
 });
