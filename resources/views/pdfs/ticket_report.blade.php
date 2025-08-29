@@ -14,14 +14,9 @@
             page-break-after: always;
         }
 
-        .header-section,
         .summary-section {
             margin-bottom: 0px;
             padding: 0px;
-        }
-
-        .header-section h1 {
-            margin-top: 0;
         }
 
         .summary-section table {
@@ -74,30 +69,46 @@
         .text-right {
             text-align: right;
         }
+
+        /* --- ADDED FOR DOMPDF TABLE PAGE BREAKS --- */
+        thead {
+            display: table-header-group;
+            /* repeat headers on each page */
+        }
+
+        tfoot {
+            display: table-footer-group;
+            /* repeat footers if any */
+        }
+
+        tr {
+            page-break-inside: avoid;
+            /* do not split rows */
+        }
     </style>
 </head>
 
 <body>
 
-<div class="header-section" style="border: 1px solid #eee; padding: 10px 10px 1px 10px; border-radius: 5px;">
-    <table style="width: 100%; border-collapse: collapse; border: none;">
-        <tr>
-            <td style="vertical-align: top; border: none;">
-                <h1 style="margin:0;">Monthly Support Report</h1>
-                <p style="margin: 0 0 0 0; /* top right bottom left */">
-                    <strong>Client:</strong> {{ $client->name }}<br>
-                    <strong>Period:</strong> {{ $fromDate->format('F Y') }}
-                </p>
-            </td>
-            <td style="text-align: right; vertical-align: top; border: none;">
-                <img src="{{ public_path('storage/dsi_logo.PNG') }}" alt="DSI Logo" style="height: 60px; max-width: 150px;">
-            </td>
-        </tr>
-    </table>
-</div>
+    <div>
+        <table style="width: 100%; border-collapse: collapse; border: none;">
+            <tr>
+                <td style="vertical-align: top; border: none; width: 100%; padding: 0;">
+                    <h1 style="margin:0;">Monthly Support Report</h1>
+                    <p style="margin: 0;">
+                        <strong>Client:</strong> {{ $client->name }}<br>
+                        <strong>Period:</strong> {{ $fromDate->format('F Y') }}
+                    </p>
+                </td>
 
-
-
+                <!-- Right side: logo -->
+                <td style="text-align: right; vertical-align: top; border: none; padding: 0;">
+                    <img src="{{ public_path('storage/dsi_logo.PNG') }}" alt="DSI Logo"
+                        style="height: 60px; max-width: 150px;">
+                </td>
+            </tr>
+        </table>
+    </div>
 
     <h2>Regular Tickets (Within Quota)</h2>
     <table>
@@ -127,7 +138,6 @@
                         @else
                             -
                         @endif
-
                     </td>
                     <td>{{ $ticket->ticket_weight }}</td>
                     <td>{{ $ticket->holiday_multiplier }}</td>
@@ -141,7 +151,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6">No regular tickets found for this period.</td>
+                    <td colspan="7">No regular tickets found for this period.</td>
                 </tr>
             @endforelse
         </tbody>
@@ -154,12 +164,14 @@
                 <th>Subject</th>
                 <th>Created At</th>
                 <th>Resolved At</th>
-
                 <th>Excess Unit Price</th>
             </tr>
         </thead>
         <tbody>
+            @php $totalExcessPrice = 0; @endphp
+
             @forelse($excessTickets as $ticket)
+                @php $totalExcessPrice += $ticket->unit_value * $client->package->excess_unit_price; @endphp
                 <tr>
                     <td>{{ $ticket->subject }}</td>
                     <td>
@@ -173,21 +185,26 @@
                         @else
                             -
                         @endif
-
                     </td>
-                    <td>
+                    <td style="text-align: right;">
                         {{ number_format($ticket->unit_value * $client->package->excess_unit_price) }}
-
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="3">No excess tickets found for this period.</td>
+                    <td colspan="4">No excess tickets found for this period.</td>
                 </tr>
             @endforelse
+
+            <!-- Total Row -->
+            @if($excessTickets->count() > 0)
+                <tr>
+                    <td colspan="3" style="text-align: right; font-weight: bold;">Total:</td>
+                    <td style="text-align: right; font-weight: bold;">{{ number_format($totalExcessPrice) }}</td>
+                </tr>
+            @endif
         </tbody>
     </table>
-
 
     <div class="summary-section">
         <h2>Billing Summary</h2>

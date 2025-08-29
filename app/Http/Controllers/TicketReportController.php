@@ -49,7 +49,7 @@ $grandTotal = $totalPackageAmount + $totalExcessAmount;
 
         $pdf = Pdf::loadView('pdfs.ticket_report', $data);
 
-        return $pdf->stream("Report-{$client->name}-{$fromDate->format('F-Y')}.pdf");
+        return $pdf->download("Report-{$client->name}-{$fromDate->format('F-Y')}.pdf");
     }
 
 }
