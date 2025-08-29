@@ -8,6 +8,7 @@ use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ClientMail;
 use App\Enums\TicketStatus;
+use App\Enums\MailStatus;
 
 class ViewTicket extends ViewRecord
 {
@@ -32,10 +33,16 @@ class ViewTicket extends ViewRecord
                     if ($record->client) {
                         foreach ($record->client->users as $user) {
                             if ($user->email) {
+                                \App\Models\Mail::create([
+                                    'user_id' => $user->id,
+                                    'ticket_id' => $record->id,
+                                    'status' => MailStatus::PENDING,
+                                ]);
                                 Mail::to($user->email)
-                                    ->send(new ClientMail(
+                                    ->queue(new ClientMail(
                                         subjectLine: 'ODMS Ticket Resolved: ' . $record->subject,
-                                        ticket: $record
+                                        ticket: $record,
+                                        userId: $user->id
                                     ));
                             }
                         }
