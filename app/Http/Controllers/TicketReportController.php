@@ -32,7 +32,7 @@ class TicketReportController extends Controller
         $regularTickets = $tickets->where('is_excess_unit', false);
         $excessTickets = $tickets->where('is_excess_unit', true);
 
-$totalPackageAmount = $client->package->base_price; // for single month
+$totalPackageAmount = $client->package->base_price; 
         $totalExcessAmount = $excessTickets->sum('unit_value');
 $grandTotal = $totalPackageAmount + $totalExcessAmount;
 

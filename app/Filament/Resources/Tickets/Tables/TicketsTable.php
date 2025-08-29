@@ -18,7 +18,6 @@ class TicketsTable
 {
     public static function configure(Table $table): Table
     {
-        // Store default filter values
         $defaultMonth = now()->month;
         $defaultYear = now()->year;
 
@@ -37,16 +36,15 @@ class TicketsTable
                     ->label('User')
                     ->sortable()
                     ->formatStateUsing(function ($state, $record) {
-                        // $state is user name
                         if (auth()->user()->hasRole('client')) {
-                            return $state; // just username
+                            return $state; 
                         }
                         return $state . ' (' . ($record->client?->name ?? 'No Client') . ')';
                     }),
                 TextColumn::make('subject')
                     ->searchable()
-                    ->limit(25) // truncate to 25 characters
-                    ->tooltip(fn($record) => $record->subject), // optional: full text on hover
+                    ->limit(25) 
+                    ->tooltip(fn($record) => $record->subject), 
 
                 TextColumn::make('created_at')
                     ->label('Created At')
@@ -59,53 +57,47 @@ class TicketsTable
                     ->badge()
                     ->sortable()
                     ->alignCenter()
-                    ->size('xl') // small, md, lg, xl
+                    ->size('xl') 
 
                     ->color(function ($state) {
-                        // Handle both enum objects and string values
                         $value = $state instanceof TicketStatus ? $state->value : $state;
 
                         return match ($value) {
-                            TicketStatus::CLOSED->value => 'success', // green
-                            TicketStatus::PENDING->value => 'warning', // yellow
-                            TicketStatus::OPEN->value => 'danger', // red
+                            TicketStatus::CLOSED->value => 'success', 
+                            TicketStatus::PENDING->value => 'warning', 
+                            TicketStatus::OPEN->value => 'danger', 
                             default => 'gray',
                         };
                     })
                     ->extraAttributes([
-                        'class' => 'text-base font-semibold px-4 py-2', // bigger font & padding
+                        'class' => 'text-base font-semibold px-4 py-2', 
                     ]),
 
                 TextColumn::make('unit_value')
                     ->label('Unit Value')
                     ->alignCenter(),
-                IconColumn::make('is_excess_unit') // use IconColumn instead of TextColumn
+                IconColumn::make('is_excess_unit') 
                     ->label('Excess Unit')
-                    ->boolean() // true/false
-                    ->trueIcon('heroicon-o-check') // check icon
+                    ->boolean() 
+                    ->trueIcon('heroicon-o-check') 
                     ->falseIcon('heroicon-o-x-mark')
-                    ->alignCenter(), // center the icon
+                    ->alignCenter(), 
             ]))
             ->headerActions([
                 Action::make('downloadReport')
                     ->label('Download PDF')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('primary')
-                    // --- ADD THE FOLLOWING TWO LINES ---
                     ->disabled(
                         fn($livewire): bool =>
-                            // Disable if the user is an admin AND no client is selected in the filter.
                         auth()->user()->client_id === null && empty($livewire->tableFilters['month']['client_id'])
                     )
                     ->action(function (Action $action, $livewire) {
-                        // Get month and year, with defaults
                         $month = Arr::get($livewire->tableFilters, 'month.month', now()->month);
                         $year = Arr::get($livewire->tableFilters, 'month.year', now()->year);
 
-                        // Determine the Client ID (this logic is still good as a fallback)
                         $clientId = auth()->user()->client_id ?: Arr::get($livewire->tableFilters, 'month.client_id');
 
-                        // This server-side check is still a good safety net
                         if (empty($clientId)) {
                             Notification::make()
                                 ->title('Client Not Selected')
@@ -116,7 +108,6 @@ class TicketsTable
                             return;
                         }
 
-                        // If client selected, redirect to PDF route
                         return redirect()->route('reports.tickets.download', [
                             'client' => $clientId,
                             'year' => $year,

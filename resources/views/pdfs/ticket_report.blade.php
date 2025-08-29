@@ -70,20 +70,16 @@
             text-align: right;
         }
 
-        /* --- ADDED FOR DOMPDF TABLE PAGE BREAKS --- */
         thead {
             display: table-header-group;
-            /* repeat headers on each page */
         }
 
         tfoot {
             display: table-footer-group;
-            /* repeat footers if any */
         }
 
         tr {
             page-break-inside: avoid;
-            /* do not split rows */
         }
     </style>
 </head>
@@ -101,7 +97,6 @@
                     </p>
                 </td>
 
-                <!-- Right side: logo -->
                 <td style="text-align: right; vertical-align: top; border: none; padding: 0;">
                     <img src="{{ public_path('storage/dsi_logo.PNG') }}" alt="DSI Logo"
                         style="height: 60px; max-width: 150px;">
@@ -196,7 +191,6 @@
                 </tr>
             @endforelse
 
-            <!-- Total Row -->
             @if($excessTickets->count() > 0)
                 <tr>
                     <td colspan="3" style="text-align: right; font-weight: bold;">Total:</td>

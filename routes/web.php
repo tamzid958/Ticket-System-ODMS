@@ -11,7 +11,6 @@ Route::get('/', function () {
 
 
 Route::middleware('auth')->group(function () {
-// Correct route
 Route::get('/reports/tickets/{client}/{year}/{month}', [TicketReportController::class, 'download'])
     ->name('reports.tickets.download');
 
