@@ -155,7 +155,7 @@
             </div>
             
             <div class="note-box">
-                <p style="margin: 0; color: #166534;">If you have any questions about the solution provided or need additional support, please don't hesitate to reopen this ticket or create a new one. We're always here to help.</p>
+                <p style="margin: 0; color: #166534;">If you have any questions about the solution provided or need additional support, please don't hesitate to contact us. We're always here to help.</p>
             </div>
             
             <p style="font-size: 15px;">Thank you for choosing our services. We value your trust in us and look forward to continuing to support your needs.</p>
