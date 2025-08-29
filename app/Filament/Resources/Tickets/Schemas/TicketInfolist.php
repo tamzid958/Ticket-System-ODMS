@@ -10,6 +10,9 @@ use Illuminate\Support\HtmlString;
 use App\Models\User;
 use Carbon\Carbon;
 use Filament\Infolists\Components\Html;
+use Filament\Infolists\Components\ViewEntry;
+use Illuminate\Support\Facades\Storage;
+
 
 class TicketInfolist
 {
@@ -23,7 +26,7 @@ class TicketInfolist
                     ->schema([
                         TextEntry::make('description')
                         ->hiddenLabel()
-                        ->html() // Allow raw HTML rendering
+                        ->html()
                         ->formatStateUsing(function (?string $state): string {
                             if (!$state) return '';
 
@@ -64,6 +67,34 @@ class TicketInfolist
 
                     ])
                     ->columnSpanFull(),
+
+                Section::make('Attachments')
+                ->schema([
+                    ViewEntry::make('attachments')
+                        ->view('filament.components.file-links')
+                        ->viewData(function ($record) {
+                            $directory = "ticket-attachments/{$record->id}";
+                            
+                            if (!Storage::disk('public')->exists($directory)) {
+                                return ['files' => []];
+                            }
+                            
+                            $files = Storage::disk('public')->files($directory);
+                            $fileData = [];
+                            
+                            foreach ($files as $file) {
+                                $fileData[] = [
+                                    'name' => basename($file),
+                                    'url' => asset('storage/' . $file),
+                                    'size' => Storage::disk('public')->size($file),
+                                ];
+                            }
+                            
+                            return ['files' => $fileData];
+                        })
+                ])
+                ->columnSpanFull(),
+
 
                 // Resolution Details (only if ticket is closed)
                 Section::make('Resolution Details')

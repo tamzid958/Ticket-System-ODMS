@@ -6,12 +6,14 @@ use App\Services\TicketUnitService;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\FileUpload;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Filament\Forms\Components\DateTimePicker;
 use App\Models\Client;
 use App\Models\Package;
+use Illuminate\Support\Facades\Storage;
 
 class TicketForm
 {
@@ -55,14 +57,91 @@ class TicketForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('subject')->required()->maxLength(255)->columnSpanFull(),
-         RichEditor::make('description')
+            TextInput::make('subject')
+                ->required()
+                ->maxLength(255)
+                ->columnSpanFull(),
+            RichEditor::make('description')
                 ->required()
                 ->columnSpanFull()
                 ->extraAttributes(['style' => 'min-height: 300px;'])
-                ->fileAttachmentsDisk('public')
-                ->fileAttachmentsDirectory('ticket-attachments')
-                ->fileAttachmentsVisibility('public'),
+                ->disableToolbarButtons(['attachFiles']),
+            FileUpload::make('attachments')
+                ->label('ICD Document Upload')
+                ->acceptedFileTypes([
+                    // Images
+                    'image/jpeg',
+                    'image/png',
+                    'image/gif',
+                    'image/bmp',
+                    'image/webp',
+                    'image/svg+xml',
+
+                    // Documents
+                    'application/pdf',
+                    'application/msword',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/vnd.ms-excel',
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'text/csv',
+                    'text/plain',
+                    'text/markdown',
+
+                    // Archives
+                    'application/zip',
+                    'application/x-rar-compressed',
+                    'application/x-7z-compressed',
+
+                    // Videos
+                    'video/mp4',
+                    'video/quicktime',
+                    'video/x-msvideo',
+                    'video/x-matroska',
+                ])
+                ->maxSize(5120)
+                ->disk('public')
+                ->directory('ticket-attachments/temp')
+                ->visibility('public')
+                ->multiple()
+                ->required(false)
+                ->rules([
+                    'mimetypes:' . implode(',', [
+                        // Images
+                        'image/jpeg',
+                        'image/png',
+                        'image/gif',
+                        'image/bmp',
+                        'image/webp',
+                        'image/svg+xml',
+
+                        // Documents
+                        'application/pdf',
+                        'application/msword',
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'application/vnd.ms-excel',
+                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        'text/csv',
+                        'text/plain',
+                        'text/markdown',
+
+                        // Archives
+                        'application/zip',
+                        'application/x-rar-compressed',
+                        'application/x-7z-compressed',
+
+                        // Videos
+                        'video/mp4',
+                        'video/quicktime',
+                        'video/x-msvideo',
+                        'video/x-matroska',
+                    ]),
+                    'max:5120',
+                ])
+                ->preserveFilenames()
+                ->afterStateUpdated(function ($state, $set, $get) {
+                    // Optional client-side updates
+                })
+                ->columnSpanFull(),
 
             DateTimePicker::make('created_at')
                 ->label('Created At')
@@ -116,7 +195,6 @@ class TicketForm
                     return $service->getUnitMessage($ticketWeight, Carbon::parse($createdAt), $clientId);
                 })
                 ->columnSpanFull(),
-
         ]);
     }
 }
