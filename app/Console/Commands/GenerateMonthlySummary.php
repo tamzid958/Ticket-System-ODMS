@@ -38,22 +38,24 @@ class GenerateMonthlySummary extends Command
      */
     public function handle()
     {
-        $lastMonth = Carbon::now()->subMonth();
-        $start = $lastMonth->copy()->startOfMonth();
+        $summaryMonthInt = $this->argument('month');
+
+        $summaryMonth = $summaryMonthInt ? Carbon::now()->month($summaryMonthInt) : Carbon::now();
+        $summaryMonth = $summaryMonth->copy()->startOfMonth();
 
         foreach (Client::all() as $client) {
 
             $clientMonthlySummary = $this->clientMonthlySummaryService->getMonthlyClientSummary(
                 $client->id,
-                $lastMonth->year,
-                $lastMonth->month,
+                $summaryMonth->year,
+                $summaryMonth->month,
             );
 
             ClientMonthlySummary::firstOrCreate(
                 [
                     'client_id' => $client->id,
-                    'year' => $lastMonth->year,
-                    'month' => $lastMonth->month,
+                    'year' => $summaryMonth->year,
+                    'month' => $summaryMonth->month,
                 ],
                 [
                     'package_id' => $clientMonthlySummary['package_id'],
@@ -69,9 +71,9 @@ class GenerateMonthlySummary extends Command
                 ]
             );
 
-            $this->info("Summary for client [{$client->name}] for {$start->format('F Y')} generated.");
+            $this->info("Summary for client [{$client->name}] for {$summaryMonth->format('F Y')} generated.");
         }
 
-        $this->info("Client monthly summary generation for {$start->format('F Y')} completed.");
+        $this->info("Client monthly summary generation for {$summaryMonth->format('F Y')} completed.");
     }
 }
