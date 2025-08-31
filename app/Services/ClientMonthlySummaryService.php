@@ -15,11 +15,17 @@ class ClientMonthlySummaryService
             ->forMonth($year, $month)
             ->get();
 
+        $costingDate = Carbon::createFromDate($year, $month, 1)->startOfDay();
+
+        $client  = $tickets->first()->client->versionedInstance($costingDate);
+        $package = $client->package->versionedInstance($costingDate);    
+
         if ($tickets->isEmpty()) {
             return [
                 'client_id'          => $client_id,
                 'year'               => $year,
                 'month'              => $month,
+                'package_id'         => $package->id,
                 'monthly_quota'      => 0,
                 'unit_used'          => 0,
                 'excess_unit_used'   => 0,
@@ -30,11 +36,6 @@ class ClientMonthlySummaryService
                 'total_cost'         => 0,
             ];
         }
-
-        $costingDate = Carbon::createFromDate($year, $month, 1)->startOfDay();
-
-        $client  = $tickets->first()->client->versionedInstance($costingDate);
-        $package = $client->package->versionedInstance($costingDate);
 
 
         $unit_used = $tickets->sum('unit_value');
