@@ -11,7 +11,7 @@ class ClientMonthlySummaryService
         public function getMonthlyClientSummary(int $client_id, int $year, int $month ): array
     {
         $tickets = Ticket::query()
-            ->where('client_id', $clientId)
+            ->where('client_id', $client_id)
             ->forMonth($year, $month)
             ->get();
 
@@ -29,9 +29,9 @@ class ClientMonthlySummaryService
                 'excess_unit_cost'   => 0,
                 'total_cost'         => 0,
             ];
-        } 
-        
-        $costingDate = Carbon::createFromDate($year, $month, 1)->startOfDay();    
+        }
+
+        $costingDate = Carbon::createFromDate($year, $month, 1)->startOfDay();
 
         $client  = $tickets->first()->client->versionedInstance($costingDate);
         $package = $client->package->versionedInstance($costingDate);

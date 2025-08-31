@@ -49,7 +49,7 @@ class GenerateMonthlySummary extends Command
                 $lastMonth->month,
             );
 
-            ClientMonthlySummary::updateOrCreate(
+            ClientMonthlySummary::firstOrCreate(
                 [
                     'client_id' => $client->id,
                     'year' => $lastMonth->year,
