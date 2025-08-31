@@ -49,10 +49,7 @@ class Package extends Model
         $versionDate = VersionHelper::getCostingDate();
         $package = $this->versionAt($versionDate);
         if(!$package){
-             $package = $this->versions()
-                 ->where('created_at', '<=', $versionDate)
-                 ->orderBy('created_at', 'desc')
-                 ->first();
+             $package = $this;
         }
         return $package;
     }

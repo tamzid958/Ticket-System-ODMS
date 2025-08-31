@@ -52,10 +52,7 @@ class Client extends Model
         $versionDate = VersionHelper::getCostingDate();
         $client = $this->versionAt($versionDate);
         if(!$client){
-            $client = $this->versions()
-                ->where('created_at', '<=', $versionDate)
-                ->orderBy('created_at', 'desc')
-                ->first();
+            $client = $this;
         }
         return $client;
     }
