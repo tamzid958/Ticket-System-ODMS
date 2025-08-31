@@ -56,12 +56,14 @@ class GenerateMonthlySummary extends Command
                     'month' => $lastMonth->month,
                 ],
                 [
+                    'package_id' => $clientMonthlySummary['package_id'],
                     'monthly_quota' => $clientMonthlySummary['monthly_quota'],
+                    'excess_per_unit_price' => $clientMonthlySummary['excess_per_unit_price'],
+                    'package_price' => $clientMonthlySummary['package_price'],
+                    'package_discount' => $clientMonthlySummary['package_discount'],
                     'unit_used' => $clientMonthlySummary['unit_used'],
                     'excess_unit_used' => $clientMonthlySummary['excess_unit_used'],
                     'unit_discount' => $clientMonthlySummary['unit_discount'],
-                    'package_price' => $clientMonthlySummary['package_price'],
-                    'package_discount' => $clientMonthlySummary['package_discount'],
                     'excess_unit_cost' => $clientMonthlySummary['excess_unit_cost'],
                     'total_cost' => $clientMonthlySummary['total_cost'],
                 ]
