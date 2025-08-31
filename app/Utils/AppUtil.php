@@ -12,7 +12,7 @@ class AppUtil
 
         for ($i = 0; $i < 2; $i++) {
             $byte = hexdec(substr($hash, $i * 2, 2));
-            $lightByte = 128 + ($byte % 128);
+            $lightByte = 64 + ($byte % 192);
             $lastFour .= str_pad(dechex($lightByte), 2, '0', STR_PAD_LEFT);
         }
 
