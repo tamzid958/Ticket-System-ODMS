@@ -6,7 +6,7 @@ use App\Models\Package;
 use App\Models\Ticket;
 use Carbon\Carbon;
 
-class TicketUnitService
+class ClientMonthlySummaryService
 {
         public function getMonthlyClientSummary(int $client_id, int $year, int $month ): array
     {
