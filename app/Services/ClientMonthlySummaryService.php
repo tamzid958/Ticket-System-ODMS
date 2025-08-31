@@ -14,10 +14,9 @@ class ClientMonthlySummaryService
             ->where('client_id', $client_id)
             ->forMonth($year, $month)
             ->get();
-
-        $costingDate = Carbon::createFromDate($year, $month, 1)->startOfDay();
-
-        $client  = $tickets->first()->client->versionedInstance($costingDate);
+        
+        $costingDate = Carbon::createFromDate($year, $month, 1)->startOfDay();    
+        $client  = Client::findOrFail($client_id)->versionedInstance($costingDate);  
         $package = $client->package->versionedInstance($costingDate);    
 
         if ($tickets->isEmpty()) {
