@@ -12,19 +12,33 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->trustProxies(at: '*');
-        $middleware->trustHosts(at: '*');
+//        $middleware->trustProxies(at: '*');
+//        $middleware->trustHosts(at: '*');
 //        $middleware->trustProxies(at: [
 //            '172.18.0.4',
 //            '172.30.30.72',
 //            '182.163.124.195',
 //        ]);
 //
-        $middleware->trustProxies(headers: Request::HEADER_X_FORWARDED_FOR |
-            Request::HEADER_X_FORWARDED_HOST |
-            Request::HEADER_X_FORWARDED_PORT |
-            Request::HEADER_X_FORWARDED_PROTO
+//        $middleware->trustProxies(headers: Request::HEADER_X_FORWARDED_FOR |
+//            Request::HEADER_X_FORWARDED_HOST |
+//            Request::HEADER_X_FORWARDED_PORT |
+//            Request::HEADER_X_FORWARDED_PROTO
+//        );
+
+        $middleware->trustProxies(
+            at: '*',  // Specify trusted proxy IPs or CIDR
+            headers:
+            Request::HEADER_X_FORWARDED_FOR
+            | Request::HEADER_X_FORWARDED_HOST
+            | Request::HEADER_X_FORWARDED_PORT
+            | Request::HEADER_X_FORWARDED_PROTO
+            | Request::HEADER_X_FORWARDED_AWS_ELB
         );
+
+        $middleware->trustHosts(at: [
+            '*.innovatorslab.net',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
