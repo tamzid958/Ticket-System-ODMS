@@ -22,9 +22,17 @@ class ClientMonthlySummaryResource extends Resource
 {
     protected static ?string $model = ClientMonthlySummary::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::Newspaper;
 
     protected static ?string $recordTitleAttribute = 'MonthlySummary';
+
+    protected static ?string $title = "Report";
+
+    protected static ?string $navigationLabel = 'Reports';
+
+    protected static ?string $modelLabel = 'Report';
+    
+    protected static ?string $pluralModelLabel = 'Reports';
 
     public static function form(Schema $schema): Schema
     {

@@ -21,25 +21,27 @@ class AdminDashboard extends ApexChartWidget
     /**
      * Disable automatic widget polling (optional)
      */
-protected ?string $pollingInterval = null;
+    protected ?string $pollingInterval = null;
+
+    public function getHeaderWidgetsColumns(): int|string|array
+    {
+        return 2;
+    }
+
+    protected int | string | array $columnSpan = 1;
 
     public function getHeading(): ?string
     {
         $now = Carbon::now('Asia/Dhaka');
         $monthYear = $now->format('F Y'); // e.g., August 2025
 
-        return "Monthly bill for clients [{$monthYear}]";
+        return "Total Bill -{$monthYear}";
     }
 
     public static function canView(): bool
     {
         $user = Auth::user();
         return $user && $user->hasAnyRole(['super_admin', 'support',]);
-    }
-
-    public function getColumnSpan(): int|string|array
-    {
-        return 'full';
     }
 
     protected function getOptions(): array
@@ -105,7 +107,7 @@ protected ?string $pollingInterval = null;
             'plotOptions' => [
                 'bar' => [
                     'borderRadius' => 5,
-                    'horizontal' => false,
+                    'horizontal' => true,
                     'distributed' => true, // one color per bar
                 ],
             ],
