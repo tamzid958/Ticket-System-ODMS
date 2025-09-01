@@ -15,14 +15,14 @@ class ClientDashboard extends StatsOverviewWidget
     public static function canView(): bool
     {
         $user = Auth::user();
-        return $user && $user->client()->exists();
+        return $user && $user->hasAnyRole(['client',]);
     }
 
     protected function getStats(): array
     {
         $user = Auth::user();
         $client = $user->client->versionedInstance();
-        
+
         if(!$client){
                 return [
                 Stat::make('Total Tickets', 0)->description('Client not found')->color('gray'),
@@ -41,7 +41,7 @@ class ClientDashboard extends StatsOverviewWidget
         $total_tickets = $monthlyTickets->count();
         $extra_units = $monthlyTickets->where('is_excess_unit', true)->sum('unit_value');
         $used_units = $monthlyTickets->sum('unit_value');
-        
+
 
         $package = $client->package->versionedInstance();
         $packageName = $package->name ?? 'N/A';
@@ -51,17 +51,17 @@ class ClientDashboard extends StatsOverviewWidget
 
         $base_price = $package->base_price;
         $package_discount = $client->discount;
-    
+
         $remainingUnits = max($packageLimit - $used_units, 0);
         $total_monthly_bill = $package->base_price + $extra_units * $package->excess_unit_price - $client->discount;
 
 
         return [
-            
+
             Stat::make("Package for {$monthName}", $packageName)
                 ->description("Base Price: {$base_price}")
                 ->color('info'),
-            
+
             Stat::make('Total Tickets', $total_tickets)
                 ->description("For {$monthName}")
                 ->color('primary'),
@@ -76,11 +76,11 @@ class ClientDashboard extends StatsOverviewWidget
 
             Stat::make('Extra Units', $extra_units)
                 ->description("Per unit: {$package->excess_unit_price} | Extra charge: {$extra_charge}"),
-                
+
             Stat::make("Monthly bill for {$monthName}", $total_monthly_bill)
-                ->description("[package price + extra charge - discount]"),    
+                ->description("[package price + extra charge - discount]"),
 
             ];
-        
+
     }
 }
