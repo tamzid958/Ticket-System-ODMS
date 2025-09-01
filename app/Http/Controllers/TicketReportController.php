@@ -16,7 +16,10 @@ class TicketReportController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $costingDate = Carbon::createFromDate((int)$year, (int)$month, 1);
+        $client = $client->versionedInstance($costingDate);
         $client->load('package');
+
         if (!$client->package) {
             return response('Client package not found.', 404);
         }
@@ -54,8 +57,8 @@ class TicketReportController extends Controller
             }
         }
 
-        $package = $client->package;
-        $totalPackageAmount = $client->package->base_price;
+        $package = $client->package->versionedInstance($costingDate);
+        $totalPackageAmount = $package->base_price;
         $packageDiscount = $client->discount;
         $totalExcessAmount = $excessTickets->sum('unit_value');
         $excessUnitPrice = $client->package->excess_unit_price;
