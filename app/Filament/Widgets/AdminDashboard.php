@@ -41,7 +41,7 @@ class AdminDashboard extends ApexChartWidget
     public static function canView(): bool
     {
         $user = Auth::user();
-        return $user && !$user->client()->exists();
+        return $user && $user->hasAnyRole(['super_admin', 'support',]);
     }
 
     protected function getOptions(): array

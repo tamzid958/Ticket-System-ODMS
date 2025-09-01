@@ -41,7 +41,7 @@ class AdminDashboardUnitCount extends ApexChartWidget
     public static function canView(): bool
     {
         $user = Auth::user();
-        return $user && !$user->client()->exists();
+        return $user && $user->hasAnyRole(['super_admin', 'support',]);
     }
 
     public function getHeaderWidgetsColumns(): int|string|array

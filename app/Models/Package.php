@@ -52,7 +52,7 @@ class Package extends Model
 
         $package ??= $this->versions()
             ->where('created_at', '>=', $versionDate)
-            ->orderBy('created_at', 'desc')
+            ->orderBy('created_at')
             ->first()
             ?->revertWithoutSaving();
 

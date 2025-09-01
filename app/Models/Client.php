@@ -55,7 +55,7 @@ class Client extends Model
 
         $client ??= $this->versions()
             ->where('created_at', '>=', $versionDate)
-            ->orderBy('created_at', 'desc')
+            ->orderBy('created_at')
             ->first()
             ?->revertWithoutSaving();
 

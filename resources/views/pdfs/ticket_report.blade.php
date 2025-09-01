@@ -93,110 +93,89 @@
                     <h1 style="margin:0;">Monthly Support Report</h1>
                     <p style="margin: 0;">
                         <strong>Client:</strong> {{ $client->name }}<br>
-                        <strong>Period:</strong> {{ $fromDate->format('F Y') }}
+                        <strong>Period:</strong> {{ $fromDate->format('F Y') }}<br/>
+                        <strong>Package:</strong> {{ $package->name }}
                     </p>
                 </td>
 
                 <td style="text-align: right; vertical-align: top; border: none; padding: 0;">
-                    <img src="{{ public_path('storage/dsi_logo.PNG') }}" alt="DSI Logo"
+                    <img src="{{ public_path('storage/dsi_logo.PNG') }}" alt="Dynamic Solution Innovators"
                         style="height: 60px; max-width: 150px;">
                 </td>
             </tr>
         </table>
     </div>
 
-    <h2>Regular Tickets (Within Quota)</h2>
+    <h2>Regular Tickets Summary</h2>
     <table>
         <thead>
             <tr>
-                <th>Subject</th>
-                <th>Created At</th>
-                <th>Resolved At</th>
-                <th>Weight</th>
-                <th>Holiday Mult.</th>
-                <th>Timeslot Mult.</th>
-                <th>Unit Count</th>
+                <th>Ticket Count</th>
+                <th>Multiplier(timeslot × weekend × weight )</th>
+                <th>Effective Units (Ticket Count × Multiplier)</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($regularTickets as $ticket)
+            @php $totalEffectiveUnits = 0; @endphp
+            @php $totalUnitDiscount = 0; @endphp
+            @forelse($countMultipliers as $pair)
+                @php
+                    $ticketCount = $pair[0];
+                    $multiplier = $pair[1];
+                    $unitDiscount = $pair[2] ?? 0;
+                    $totalUnitDiscount += $unitDiscount;
+                    $effectiveUnits = $ticketCount * $multiplier;
+                    $totalEffectiveUnits += $effectiveUnits
+                @endphp
                 <tr>
-                    <td>{{ $ticket->subject }}</td>
-                    <td>
-                        {{ $ticket->created_at->format('d M Y') }}<br>
-                        {{ $ticket->created_at->format('h:i A') }}
-                    </td>
-                    <td>
-                        @if($ticket->status === \App\Enums\TicketStatus::CLOSED)
-                            {{ $ticket->updated_at->format('d M Y') }}<br>
-                            {{ $ticket->updated_at->format('h:i A') }}
-                        @else
-                            -
-                        @endif
-                    </td>
-                    <td>{{ $ticket->ticket_weight }}</td>
-                    <td>{{ $ticket->holiday_multiplier }}</td>
-                    <td>{{ $ticket->timeslot_multiplier }}</td>
-                    <td>
-                        {{ number_format($ticket->unit_value) }}
-                        @if($ticket->unit_discount > 0)
-                            <span class="unit-discount">(Discount: {{ $ticket->unit_discount }})</span>
-                        @endif
-                    </td>
+                    <td>{{ $ticketCount }}</td>
+                    <td>{{ $multiplier }}</td>
+                    <td>{{ $effectiveUnits }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7">No regular tickets found for this period.</td>
+                    <td colspan="3">No regular tickets found for this period.</td>
                 </tr>
             @endforelse
+                <tr>
+                    <td colspan="2" style="text-align: right; font-weight: bold;">Total Effective Units:</td>
+                    <td style="font-weight: bold;">{{ $totalEffectiveUnits }}</td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: right; font-weight: bold;">Total unit discount:</td>
+                    <td style="font-weight: bold;">{{ $totalUnitDiscount }}</td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: right; font-weight: bold;">Total Effective Units after unit discount:</td>
+                    <td style="font-weight: bold;">{{ $totalEffectiveUnits - $totalUnitDiscount }}</td>
+                </tr>
+
         </tbody>
     </table>
+
 
     <h2>Excess Tickets (Beyond Quota)</h2>
     <table>
         <thead>
             <tr>
-                <th>Subject</th>
-                <th>Created At</th>
-                <th>Resolved At</th>
-                <th>Excess Unit Price</th>
+                <th>Total Excess Tickets</th>
+                <th>Per Unit Price</th>
             </tr>
         </thead>
         <tbody>
-            @php $totalExcessPrice = 0; @endphp
+            @php
+                $excessTicketCount = $excessTickets->count();
+                $totalExcessPrice = $excessTicketCount * $excessUnitPrice;
+            @endphp
 
-            @forelse($excessTickets as $ticket)
-                @php $totalExcessPrice += $ticket->unit_value * $client->package->excess_unit_price; @endphp
-                <tr>
-                    <td>{{ $ticket->subject }}</td>
-                    <td>
-                        {{ $ticket->created_at->format('d M Y') }}<br>
-                        {{ $ticket->created_at->format('h:i A') }}
-                    </td>
-                    <td>
-                        @if($ticket->status === \App\Enums\TicketStatus::CLOSED)
-                            {{ $ticket->updated_at->format('d M Y') }}<br>
-                            {{ $ticket->updated_at->format('h:i A') }}
-                        @else
-                            -
-                        @endif
-                    </td>
-                    <td style="text-align: right;">
-                        {{ number_format($ticket->unit_value * $client->package->excess_unit_price) }}
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="4">No excess tickets found for this period.</td>
-                </tr>
-            @endforelse
-
-            @if($excessTickets->count() > 0)
-                <tr>
-                    <td colspan="3" style="text-align: right; font-weight: bold;">Total:</td>
-                    <td style="text-align: right; font-weight: bold;">{{ number_format($totalExcessPrice) }}</td>
-                </tr>
-            @endif
+            <tr>
+                <td>{{ $excessTicketCount }}</td>
+                <td>{{ number_format($excessUnitPrice, 2) }}</td>
+            </tr>
+            <tr>
+                <td colspan="1" style="text-align: right; font-weight: bold;">Total Excess Price:</td>
+                <td style="font-weight: bold;">{{ number_format($totalExcessPrice, 2) }}</td>
+            </tr>
         </tbody>
     </table>
 
@@ -209,14 +188,19 @@
                 <td>&nbsp;</td>
             </tr>
             <tr>
-                <td class="label">Excess Unit Amount:</td>
-                <td class="value">{{ number_format($totalExcessAmount * $client->package->excess_unit_price, 2) }}</td>
+                <td class="label">Monthly Package Discount:</td>
+                <td class="value">- {{ number_format($packageDiscount, 2) }}</td>
                 <td>&nbsp;</td>
             </tr>
             <tr>
-                <td class="label grand-total">Grand Total:</td>
+                <td class="label">Excess Unit Amount:</td>
+                <td class="value">{{ number_format($totalExcessPrice, 2) }}</td>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <td class="label grand-total">Grand Total After Discount:</td>
                 <td class="value grand-total">
-                    {{ number_format($totalPackageAmount + $totalExcessAmount * $client->package->excess_unit_price, 2) }}
+                    {{ number_format($totalPackageAmount + $totalExcessPrice - $packageDiscount, 2) }}
                 </td>
                 <td>&nbsp;</td>
             </tr>
