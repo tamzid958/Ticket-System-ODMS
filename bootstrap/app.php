@@ -37,7 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
         );
 
         $middleware->trustHosts(at: [
-            '*.innovatorslab.net',
+            'odms-tts.innovatorslab.net',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
