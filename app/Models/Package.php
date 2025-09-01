@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\VersionHelper;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -44,13 +45,19 @@ class Package extends Model
         'timings',
     ];
 
-    public function versionedInstance ()
+    public function versionedInstance(Carbon $date = null)
     {
-        $versionDate = VersionHelper::getCostingDate();
-        $package = $this->versionAt($versionDate);
-        if(!$package){
-             $package = $this;
-        }
+        $versionDate = VersionHelper::getCostingDate($date);
+        $package = $this->versionAt($versionDate)?->revertWithoutSaving();
+
+        $package ??= $this->versions()
+            ->where('created_at', '>=', $versionDate)
+            ->orderBy('created_at', 'desc')
+            ->first()
+            ?->revertWithoutSaving();
+
+        $package ??= $this;
+
         return $package;
     }
 }

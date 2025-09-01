@@ -11,8 +11,8 @@ class VersionHelper
      * Returns the date which will be used for cost calculation
      * @return Carbon
      */
-    public static function getCostingDate()
+    public static function getCostingDate(Carbon $date = null)
     {
-        return Carbon::now()->startOfMonth();
+        return ($date ?? Carbon::now())->startOfMonth();
     }
 }

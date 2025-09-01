@@ -13,7 +13,7 @@ use Carbon\Carbon;
 
 class Ticket extends Model implements Commentable
 {
-  
+
     use HasFactory, SoftDeletes, HasComments;
 
     /**
@@ -91,7 +91,7 @@ class Ticket extends Model implements Commentable
             } elseif (empty($ticket->client_id)) {
                 throw new \Exception('Admin/support must choose a client.');
             }
-            
+
             // Set timestamps manually. If created_at is not already set by the admin form, default to now().
             $ticket->created_at ??= now();
             $ticket->updated_at = now();
@@ -105,7 +105,7 @@ class Ticket extends Model implements Commentable
         static::updating(function ($ticket) {
             // Always set updated_at on update
             $ticket->updated_at = now();
-            
+
             if ($ticket->isDirty('ticket_weight', 'created_at')) { // Also recalculate if created_at changes on edit
                 $ticket->calculateAndSetUnitFields();
             }
@@ -136,7 +136,8 @@ class Ticket extends Model implements Commentable
     public function calculateAndSetUnitFields(): void
     {
         // This method is now correct, because $this->created_at will have the right value
-        $service = new TicketUnitService($this->client?->package);
+        $package = $this->client?->package->versionedInstance();
+        $service = new TicketUnitService($package);
         $data = $service->calculateTicketData(
             $this->ticket_weight ?? 1,
             $this->created_at, // No need for the `?? now()` fallback anymore

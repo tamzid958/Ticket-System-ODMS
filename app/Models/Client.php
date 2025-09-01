@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\VersionHelper;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -34,7 +35,7 @@ class Client extends Model
         return $this->hasMany(User::class);
     }
 
-     public function tickets()
+    public function tickets()
     {
         return $this->hasMany(Ticket::class);
     }
@@ -47,13 +48,19 @@ class Client extends Model
         'discount',
     ];
 
-    public function versionedInstance ()
+    public function versionedInstance(Carbon $date = null)
     {
-        $versionDate = VersionHelper::getCostingDate();
-        $client = $this->versionAt($versionDate);
-        if(!$client){
-             $client = $this;
-        }
+        $versionDate = VersionHelper::getCostingDate($date);
+        $client = $this->versionAt($versionDate)?->revertWithoutSaving();
+
+        $client ??= $this->versions()
+            ->where('created_at', '>=', $versionDate)
+            ->orderBy('created_at', 'desc')
+            ->first()
+            ?->revertWithoutSaving();
+
+        $client ??= $this;
+
         return $client;
     }
 }
