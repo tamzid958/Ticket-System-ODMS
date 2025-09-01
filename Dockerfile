@@ -35,7 +35,10 @@ RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoload
 
 RUN npm run build
 
-RUN php artisan optimize:clear
+RUN php artisan cache:clear
+RUN php artisan config:clear
+RUN php artisan route:clear
+
 RUN php artisan storage:link
 RUN php artisan clear-compiled
 RUN php artisan optimize
