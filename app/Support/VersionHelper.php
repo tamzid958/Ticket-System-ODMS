@@ -13,6 +13,6 @@ class VersionHelper
      */
     public static function getCostingDate(Carbon $date = null)
     {
-        return ($date ?? Carbon::now())->startOfMonth();
+        return ($date ?? Carbon::now())->startOfMonth()->startOfDay();
     }
 }
