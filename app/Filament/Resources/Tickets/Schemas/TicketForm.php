@@ -62,10 +62,10 @@ class TicketForm
                 ->maxLength(255)
                 ->columnSpanFull(),
             RichEditor::make('description')
+                ->disableAllToolbarButtons()
                 ->required()
                 ->columnSpanFull()
-                ->extraAttributes(['style' => 'min-height: 300px;'])
-                ->disableToolbarButtons(['attachFiles']),
+                ->extraAttributes(['style' => 'min-height: 300px;']),
             FileUpload::make('attachments')
                 ->label('ICD Document Upload')
                 ->acceptedFileTypes([

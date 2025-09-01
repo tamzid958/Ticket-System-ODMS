@@ -21,7 +21,7 @@ class ClientDashboard extends StatsOverviewWidget
     protected function getStats(): array
     {
         $user = Auth::user();
-        $client = $user->client->versionedInstance();
+        $client = $user->client?->versionedInstance();
 
         if(!$client){
                 return [
