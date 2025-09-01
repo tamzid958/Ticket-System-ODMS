@@ -7,6 +7,8 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Table;
+use Filament\Actions\Action;
+use Illuminate\Support\Arr;
 use Carbon\Carbon;
 
 class ClientMonthlySummariesTable
@@ -107,6 +109,50 @@ class ClientMonthlySummariesTable
             ])
             ->recordActions([
                 ViewAction::make(),
+            ])
+
+            ->headerActions([
+                Action::make('downloadReport')
+                    ->label('Download PDF')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('primary')
+                    ->disabled(function ($livewire): bool {
+                        $user = auth()->user();
+
+                        // If admin → require client, year and month
+                        if ($user->client_id === null) {
+                            return empty($livewire->tableFilters['month']['client_id'])
+                                || empty($livewire->tableFilters['month']['year'])
+                                || empty($livewire->tableFilters['month']['month']);
+                        }
+
+                        // If client user → require only year and month
+                        return empty($livewire->tableFilters['month']['year'])
+                            || empty($livewire->tableFilters['month']['month']);
+                    })
+                    ->action(function (Action $action, $livewire) {
+                        $month = Arr::get($livewire->tableFilters, 'month.month', now()->month);
+                        $year = Arr::get($livewire->tableFilters, 'month.year', now()->year);
+
+                        $clientId = auth()->user()->client_id ?: Arr::get($livewire->tableFilters, 'month.client_id');
+
+                        if (empty($clientId)) {
+                            Notification::make()
+                                ->title('Client Not Selected')
+                                ->body('Please select a client from the filters to generate a report.')
+                                ->danger()
+                                ->send();
+                            $action->halt();
+                            return;
+                        }
+
+                        return redirect()->route('reports.tickets.download', [
+                            'client' => $clientId,
+                            'year' => $year,
+                            'month' => $month,
+                        ]);
+                    })
+                    ->requiresConfirmation(false),
             ]);
     }
 }
