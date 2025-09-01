@@ -42,7 +42,7 @@ class TicketUnitService
 
     protected function getTimeslotMultiplier(Carbon $ticketTime): float
     {
-        $ticketTimeOnly = $ticketTime->format('H:i'); 
+        $ticketTimeOnly = $ticketTime->format('H:i');
 
         foreach ($this->package->timings ?? [] as $slot) {
 
@@ -55,7 +55,7 @@ class TicketUnitService
                 $ticketTimeCarbon = Carbon::createFromFormat('H:i', $ticketTimeOnly);
 
 
-                if ($ticketTimeCarbon->between($startTime, $endTime)) {
+                if ($ticketTimeCarbon->between($startTime, $endTime->addMinute())) {
                     return $slot['multiplier'] ?? 1;
                 }
             }
@@ -106,7 +106,7 @@ class TicketUnitService
     {
         if (preg_match('/Total units:\s*(\d+)/', $message, $m)) return (int)$m[1];
         if (preg_match('/Exceeds quota\. Units:\s*(\d+)/i', $message, $matches)) return (int) $matches[1];
-    
+
         return null;
     }
 }
