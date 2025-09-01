@@ -28,7 +28,7 @@ class TicketForm
     {
         $user = Auth::user();
 
-        if (auth()->user()->client_id === null) {
+        if ($user->hasAnyRole(['super_admin', 'support',])) {
             return $get('client_id');
         }
 
@@ -62,10 +62,10 @@ class TicketForm
                 ->maxLength(255)
                 ->columnSpanFull(),
             RichEditor::make('description')
+                ->disableAllToolbarButtons()
                 ->required()
                 ->columnSpanFull()
-                ->extraAttributes(['style' => 'min-height: 300px;'])
-                ->disableToolbarButtons(['attachFiles']),
+                ->extraAttributes(['style' => 'min-height: 300px;']),
             FileUpload::make('attachments')
                 ->label('ICD Document Upload')
                 ->acceptedFileTypes([
@@ -149,25 +149,24 @@ class TicketForm
                 ->seconds(false)
                 ->live()
                 ->timezone('Asia/Dhaka')
-                ->visible(fn () => Auth::user()->client_id === null)
+                ->visible(fn () => Auth::user()->hasAnyRole(['super_admin', 'support',]))
                 ->afterStateUpdated(function ($set, $get) {
                     $set('unit_value', self::calculateUnitValue($get));
                 })
                 ->columnSpanFull(),
 
             TextInput::make('ticket_weight')->default(1)->numeric()->live()
-                ->visible(fn() => Auth::user()->client_id === null)
+                ->visible(fn () => Auth::user()->hasAnyRole(['super_admin', 'support',]))
                 ->afterStateUpdated(function ($set, $get) {
                     $set('unit_value', self::calculateUnitValue($get));
                 })->columnSpanFull(),
 
             Select::make('client_id')->label('Client')->options(fn() => Client::pluck('name', 'id'))->live()
-                ->visible(fn() =>Auth::user()->client_id === null)
-                ->required(fn() => Auth::user()->client_id === null)
+                ->visible(fn () => Auth::user()->hasAnyRole(['super_admin', 'support',]))
+                ->required(fn() => Auth::user()->hasAnyRole(['super_admin', 'support',]))
                 ->afterStateUpdated(function ($set, $get) {
                     $set('unit_value', self::calculateUnitValue($get));
                 })->columnSpanFull(),
-
 
             TextInput::make('unit_value')
                 ->label('Calculated Unit Value')
