@@ -49,7 +49,7 @@ class IcsHolidayService
             return $record->ics_file;
         }
 
-        $icsUrl = env('HOLIDAY_ICS_FILE');
+        $icsUrl = env('HOLIDAY_ICS_FILE', 'HOLIDAY_ICS_FILE=https://www.officeholidays.com/ics/bangladesh');
         $icsContent = file_get_contents($icsUrl);
 
         HolidayIcs::create([
