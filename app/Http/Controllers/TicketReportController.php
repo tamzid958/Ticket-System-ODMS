@@ -12,7 +12,7 @@ class TicketReportController extends Controller
 {
     public function download(Client $client, string $year, string $month)
     {
-        if (auth()->user()->client_id !== null && auth()->user()->client_id != $client->id) {
+        if (auth()->user()->hasAnyRole(['client',]) && auth()->user()->client_id != $client->id) {
             abort(403, 'Unauthorized action.');
         }
 

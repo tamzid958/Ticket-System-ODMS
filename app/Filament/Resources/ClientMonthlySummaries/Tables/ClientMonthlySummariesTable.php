@@ -19,7 +19,7 @@ class ClientMonthlySummariesTable
                       ->orderByDesc('month');
 
                 // Restrict to client if user is a client
-                if (auth()->user()->client_id !== null) {
+                if (auth()->user()->hasAnyRole(['client',])) {
                     $query->where('client_id', auth()->user()->client_id);
                 }
             })
@@ -82,7 +82,7 @@ class ClientMonthlySummariesTable
                                 range(now()->year, now()->year - 5)
                             )),
 
-                        auth()->user()->client_id === null
+                        auth()->user()->hasAnyRole(['super_admin', 'support',])
                             ? Select::make('client_id')
                                 ->label('Client')
                                 ->options(\App\Models\Client::pluck('name', 'id')->toArray())

@@ -27,9 +27,9 @@ class TicketsTable
                     ->when(auth()->user()->hasRole('client'), function ($query) {
                         $query->where('client_id', auth()->user()->client_id);
                     });
-   
+
             })
-            ->defaultSort('created_at', 'desc') 
+            ->defaultSort('created_at', 'desc')
             ->columns(array_filter([
 
                 TextColumn::make('user.name')
@@ -37,14 +37,14 @@ class TicketsTable
                     ->sortable()
                     ->formatStateUsing(function ($state, $record) {
                         if (auth()->user()->hasRole('client')) {
-                            return $state; 
+                            return $state;
                         }
                         return $state . ' (' . ($record->client?->name ?? 'No Client') . ')';
                     }),
                 TextColumn::make('subject')
                     ->searchable()
-                    ->limit(25) 
-                    ->tooltip(fn($record) => $record->subject), 
+                    ->limit(25)
+                    ->tooltip(fn($record) => $record->subject),
 
                 TextColumn::make('created_at')
                     ->label('Created At')
@@ -57,31 +57,31 @@ class TicketsTable
                     ->badge()
                     ->sortable()
                     ->alignCenter()
-                    ->size('xl') 
+                    ->size('xl')
 
                     ->color(function ($state) {
                         $value = $state instanceof TicketStatus ? $state->value : $state;
 
                         return match ($value) {
-                            TicketStatus::CLOSED->value => 'success', 
-                            TicketStatus::PENDING->value => 'warning', 
-                            TicketStatus::OPEN->value => 'danger', 
+                            TicketStatus::CLOSED->value => 'success',
+                            TicketStatus::PENDING->value => 'warning',
+                            TicketStatus::OPEN->value => 'danger',
                             default => 'gray',
                         };
                     })
                     ->extraAttributes([
-                        'class' => 'text-base font-semibold px-4 py-2', 
+                        'class' => 'text-base font-semibold px-4 py-2',
                     ]),
 
                 TextColumn::make('unit_value')
                     ->label('Unit Value')
                     ->alignCenter(),
-                IconColumn::make('is_excess_unit') 
+                IconColumn::make('is_excess_unit')
                     ->label('Excess Unit')
-                    ->boolean() 
-                    ->trueIcon('heroicon-o-check') 
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check')
                     ->falseIcon('heroicon-o-x-mark')
-                    ->alignCenter(), 
+                    ->alignCenter(),
             ]))
             ->headerActions([
                 Action::make('downloadReport')
@@ -90,7 +90,7 @@ class TicketsTable
                     ->color('primary')
                     ->disabled(
                         fn($livewire): bool =>
-                        auth()->user()->client_id === null && empty($livewire->tableFilters['month']['client_id'])
+                        auth()->user()->hasAnyRole(['super_admin', 'support',]) && empty($livewire->tableFilters['month']['client_id'])
                     )
                     ->action(function (Action $action, $livewire) {
                         $month = Arr::get($livewire->tableFilters, 'month.month', now()->month);
@@ -154,7 +154,7 @@ class TicketsTable
                                 ->required(),
 
                                 // Show client selector only to admins
-                            auth()->user()->client_id === null
+                            auth()->user()->hasAnyRole(['super_admin', 'support',])
                             ? Select::make('client_id')
                                 ->label('Client')
                                 ->options(\App\Models\Client::pluck('name', 'id')->toArray())
