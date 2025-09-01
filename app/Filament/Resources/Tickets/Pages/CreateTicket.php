@@ -25,14 +25,14 @@ class CreateTicket extends CreateRecord
         if ($user->hasRole('client') && $user->client_id) {
 
 
-            $client = Client::find($user->client_id);
-            $package = $client?->package ?? Package::first();
+            $client = Client::find($user->client_id)->versionedInstance();
+            $package = $client?->package ?? Package::first()->versionedInstance();
 
             if ($package) {
                 $service = new TicketUnitService($package);
-                $ticketWeight = 1; 
+                $ticketWeight = 1;
                 $createdAt = now();
-                
+
                 $message = $service->getUnitMessage($ticketWeight, $createdAt, $user->client_id);
                 $data['unit_value'] = $service->extractTotalUnitsFromUnitMessage($message);
             }

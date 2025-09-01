@@ -45,15 +45,17 @@ class Package extends Model
         'timings',
     ];
 
-    public function versionedInstance (Carbon $date = null)
+    public function versionedInstance(Carbon $date = null)
     {
         $versionDate = VersionHelper::getCostingDate($date);
-        $package = $this->versionAt($versionDate);
+        $package = $this->versionAt($versionDate)->versionable;
 
         $package ??= $this->versions()
             ->where('created_at', '<=', $versionDate)
             ->orderBy('created_at', 'desc')
-            ->first();
+            ->first()
+            ?->getModel()
+            ->versionable;
 
         $package ??= $this;
 

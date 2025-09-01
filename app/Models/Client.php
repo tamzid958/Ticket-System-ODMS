@@ -35,7 +35,7 @@ class Client extends Model
         return $this->hasMany(User::class);
     }
 
-     public function tickets()
+    public function tickets()
     {
         return $this->hasMany(Ticket::class);
     }
@@ -48,15 +48,17 @@ class Client extends Model
         'discount',
     ];
 
-    public function versionedInstance (Carbon $date = null)
+    public function versionedInstance(Carbon $date = null)
     {
         $versionDate = VersionHelper::getCostingDate($date);
-        $client = $this->versionAt($versionDate);
+        $client = $this->versionAt($versionDate)->versionable;
 
         $client ??= $this->versions()
             ->where('created_at', '<=', $versionDate)
             ->orderBy('created_at', 'desc')
-            ->first();
+            ->first()
+            ?->getModel()
+            ->versionable;
 
         $client ??= $this;
 

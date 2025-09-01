@@ -17,8 +17,8 @@ class TicketForm
 {
     protected static function resolveService($clientId): ?TicketUnitService
     {
-        $client = Client::find($clientId);
-        $package = $client?->package ?? Package::first();
+        $client = Client::find($clientId)->versionedInstance();
+        $package = $client?->package->versionedInstance();
         return $package ? new TicketUnitService($package) : null;
     }
 
@@ -69,7 +69,7 @@ class TicketForm
                 ->default(Carbon::now('Asia/Dhaka'))
                 ->seconds(false)
                 ->live()
-                ->timezone('Asia/Dhaka')  
+                ->timezone('Asia/Dhaka')
                 ->visible(fn () => Auth::user()->client_id === null)
                 ->afterStateUpdated(function ($set, $get) {
                     $set('unit_value', self::calculateUnitValue($get));
