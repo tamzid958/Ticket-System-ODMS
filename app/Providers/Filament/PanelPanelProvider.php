@@ -10,6 +10,7 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Schemas\Components\Grid;
 use Filament\Support\Colors\Color;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
@@ -23,6 +24,7 @@ use App\Filament\Widgets\ClientDashboard;
 use App\Filament\Widgets\AdminDashboard;
 use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
 use App\Filament\Pages\Auth\EditProfile;
+
 
 class PanelPanelProvider extends PanelProvider
 {
@@ -38,8 +40,14 @@ class PanelPanelProvider extends PanelProvider
             ->passwordReset()
             ->globalSearch(false)
             ->colors([
-                'primary' => Color::Amber,
+                'danger' => Color::Rose,
+                'gray' => Color::Gray,
+                'info' => Color::Blue,
+                'primary' => Color::Indigo,
+                'success' => Color::Emerald,
+                'warning' => Color::Orange,
             ])
+            ->darkMode(false)
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([

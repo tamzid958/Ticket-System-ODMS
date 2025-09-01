@@ -8,14 +8,15 @@ class AppUtil
     public static function generateColorCode(string $name): string
     {
         $hash = md5($name);
-        $lastFour = '';
+        $color = '';
 
-        for ($i = 0; $i < 2; $i++) {
+        for ($i = 0; $i < 3; $i++) {
             $byte = hexdec(substr($hash, $i * 2, 2));
-            $lightByte = 64 + ($byte % 192);
-            $lastFour .= str_pad(dechex($lightByte), 2, '0', STR_PAD_LEFT);
+            // restrict to dark range (0–128)
+            $darkByte = $byte % 128;
+            $color .= str_pad(dechex($darkByte), 2, '0', STR_PAD_LEFT);
         }
 
-        return '#FF' . $lastFour;
+        return "#$color";
     }
 }

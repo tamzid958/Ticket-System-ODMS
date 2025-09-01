@@ -35,7 +35,7 @@ class AdminDashboardUnitCount extends ApexChartWidget
         $now = Carbon::now('Asia/Dhaka');
         $monthYear = $now->format('F Y');
 
-        return "Monthly used units for clients [{$monthYear}]";
+        return "Tickets - {$monthYear}";
     }
 
     public static function canView(): bool
@@ -44,10 +44,12 @@ class AdminDashboardUnitCount extends ApexChartWidget
         return $user && !$user->client()->exists();
     }
 
-    public function getColumnSpan(): int|string|array
+    public function getHeaderWidgetsColumns(): int|string|array
     {
-        return 'full';
+        return 2;
     }
+
+    protected int | string | array $columnSpan = 1;
 
     protected function getOptions(): array
     {
@@ -105,7 +107,7 @@ class AdminDashboardUnitCount extends ApexChartWidget
             'plotOptions' => [
                 'bar' => [
                     'borderRadius' => 5,
-                    'horizontal' => false,
+                    'horizontal' => true,
                     'distributed' => true,
                 ],
             ],
