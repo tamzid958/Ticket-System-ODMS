@@ -4,7 +4,6 @@ services:
     app:
         build:
             context: .
-        container_name: tts-odms
         restart: unless-stopped
         ports:
             - "${APP_PORT}:8000"
@@ -15,7 +14,6 @@ services:
 
     db:
         image: postgres:latest
-        container_name: tts_db
         restart: unless-stopped
         environment:
             POSTGRES_DB: ${DB_DATABASE}
@@ -30,7 +28,6 @@ services:
         build:
             context: .
             dockerfile: supervisor/supervisor.dockerfile
-        container_name: supervisor
         restart: unless-stopped
         depends_on:
             -   db

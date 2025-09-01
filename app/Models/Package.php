@@ -48,14 +48,13 @@ class Package extends Model
     public function versionedInstance(Carbon $date = null)
     {
         $versionDate = VersionHelper::getCostingDate($date);
-        $package = $this->versionAt($versionDate)?->getModel()->versionable;
+        $package = $this->versionAt($versionDate)?->revertWithoutSaving();
 
         $package ??= $this->versions()
             ->where('created_at', '>=', $versionDate)
             ->orderBy('created_at', 'desc')
             ->first()
-            ?->getModel()
-            ->versionable;
+            ?->revertWithoutSaving();
 
         $package ??= $this;
 

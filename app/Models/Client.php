@@ -51,14 +51,13 @@ class Client extends Model
     public function versionedInstance(Carbon $date = null)
     {
         $versionDate = VersionHelper::getCostingDate($date);
-        $client = $this->versionAt($versionDate)?->getModel()->versionable;
+        $client = $this->versionAt($versionDate)?->revertWithoutSaving();
 
         $client ??= $this->versions()
             ->where('created_at', '>=', $versionDate)
             ->orderBy('created_at', 'desc')
             ->first()
-            ?->getModel()
-            ->versionable;
+            ?->revertWithoutSaving();
 
         $client ??= $this;
 
