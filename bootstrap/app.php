@@ -22,9 +22,15 @@ return Application::configure(basePath: dirname(__DIR__))
             | Request::HEADER_X_FORWARDED_AWS_ELB
         );
 
-        $middleware->trustHosts(at: [
-            'odms-tts.innovatorslab.net',
-        ]);
+        $envHosts = env('TRUSTED_HOSTS', '');
+
+        if (!empty($envHosts)) {
+            $hostsArray = array_map('trim', explode(',', $envHosts));
+
+            $middleware->trustHosts(
+                at: $hostsArray
+            );
+        }
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
