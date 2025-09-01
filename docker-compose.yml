@@ -9,6 +9,7 @@ services:
             - "${APP_PORT}:8000"
         volumes:
             - ~/tts_app_data:/app/storage/app/public
+            - ~/tts_app_logs:/app/storage/logs
         depends_on:
             - db
 
