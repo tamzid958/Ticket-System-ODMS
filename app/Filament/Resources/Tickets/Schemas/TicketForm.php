@@ -6,12 +6,14 @@ use App\Services\TicketUnitService;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\FileUpload;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Filament\Forms\Components\DateTimePicker;
 use App\Models\Client;
 use App\Models\Package;
+use Illuminate\Support\Facades\Storage;
 
 class TicketForm
 {
@@ -26,7 +28,7 @@ class TicketForm
     {
         $user = Auth::user();
 
-        if (auth()->user()->client_id === null) {
+        if ($user->hasAnyRole(['super_admin', 'support',])) {
             return $get('client_id');
         }
 
@@ -55,14 +57,91 @@ class TicketForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('subject')->required()->maxLength(255)->columnSpanFull(),
-         RichEditor::make('description')
+            TextInput::make('subject')
+                ->required()
+                ->maxLength(255)
+                ->columnSpanFull(),
+            RichEditor::make('description')
+                ->disableAllToolbarButtons()
                 ->required()
                 ->columnSpanFull()
-                ->extraAttributes(['style' => 'min-height: 300px;'])
-                ->fileAttachmentsDisk('public')
-                ->fileAttachmentsDirectory('ticket-attachments')
-                ->fileAttachmentsVisibility('public'),
+                ->extraAttributes(['style' => 'min-height: 300px;']),
+            FileUpload::make('attachments')
+                ->label('ICD Document Upload')
+                ->acceptedFileTypes([
+                    // Images
+                    'image/jpeg',
+                    'image/png',
+                    'image/gif',
+                    'image/bmp',
+                    'image/webp',
+                    'image/svg+xml',
+
+                    // Documents
+                    'application/pdf',
+                    'application/msword',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/vnd.ms-excel',
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'text/csv',
+                    'text/plain',
+                    'text/markdown',
+
+                    // Archives
+                    'application/zip',
+                    'application/x-rar-compressed',
+                    'application/x-7z-compressed',
+
+                    // Videos
+                    'video/mp4',
+                    'video/quicktime',
+                    'video/x-msvideo',
+                    'video/x-matroska',
+                ])
+                ->maxSize(5120)
+                ->disk('public')
+                ->directory('ticket-attachments/temp')
+                ->visibility('public')
+                ->multiple()
+                ->required(false)
+                ->rules([
+                    'mimetypes:' . implode(',', [
+                        // Images
+                        'image/jpeg',
+                        'image/png',
+                        'image/gif',
+                        'image/bmp',
+                        'image/webp',
+                        'image/svg+xml',
+
+                        // Documents
+                        'application/pdf',
+                        'application/msword',
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'application/vnd.ms-excel',
+                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        'text/csv',
+                        'text/plain',
+                        'text/markdown',
+
+                        // Archives
+                        'application/zip',
+                        'application/x-rar-compressed',
+                        'application/x-7z-compressed',
+
+                        // Videos
+                        'video/mp4',
+                        'video/quicktime',
+                        'video/x-msvideo',
+                        'video/x-matroska',
+                    ]),
+                    'max:5120',
+                ])
+                ->preserveFilenames()
+                ->afterStateUpdated(function ($state, $set, $get) {
+                    // Optional client-side updates
+                })
+                ->columnSpanFull(),
 
             DateTimePicker::make('created_at')
                 ->label('Created At')
@@ -70,25 +149,24 @@ class TicketForm
                 ->seconds(false)
                 ->live()
                 ->timezone('Asia/Dhaka')
-                ->visible(fn () => Auth::user()->client_id === null)
+                ->visible(fn () => Auth::user()->hasAnyRole(['super_admin', 'support',]))
                 ->afterStateUpdated(function ($set, $get) {
                     $set('unit_value', self::calculateUnitValue($get));
                 })
                 ->columnSpanFull(),
 
             TextInput::make('ticket_weight')->default(1)->numeric()->live()
-                ->visible(fn() => Auth::user()->client_id === null)
+                ->visible(fn () => Auth::user()->hasAnyRole(['super_admin', 'support',]))
                 ->afterStateUpdated(function ($set, $get) {
                     $set('unit_value', self::calculateUnitValue($get));
                 })->columnSpanFull(),
 
             Select::make('client_id')->label('Client')->options(fn() => Client::pluck('name', 'id'))->live()
-                ->visible(fn() =>Auth::user()->client_id === null)
-                ->required(fn() => Auth::user()->client_id === null)
+                ->visible(fn () => Auth::user()->hasAnyRole(['super_admin', 'support',]))
+                ->required(fn() => Auth::user()->hasAnyRole(['super_admin', 'support',]))
                 ->afterStateUpdated(function ($set, $get) {
                     $set('unit_value', self::calculateUnitValue($get));
                 })->columnSpanFull(),
-
 
             TextInput::make('unit_value')
                 ->label('Calculated Unit Value')
@@ -116,7 +194,6 @@ class TicketForm
                     return $service->getUnitMessage($ticketWeight, Carbon::parse($createdAt), $clientId);
                 })
                 ->columnSpanFull(),
-
         ]);
     }
 }

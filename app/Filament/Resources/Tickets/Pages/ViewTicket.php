@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Tickets\Pages;
 
 use App\Filament\Resources\Tickets\TicketResource;
 use Filament\Actions\Action;
+use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ClientMail;
@@ -17,6 +18,7 @@ class ViewTicket extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            EditAction::make("Edit"),
             Action::make('resolve')
                 ->label('Resolve Ticket')
                 ->color('success')

@@ -119,7 +119,7 @@ class TicketsTable
                                 ->required(),
 
                                 // Show client selector only to admins
-                            auth()->user()->client_id === null
+                            auth()->user()->hasAnyRole(['super_admin', 'support',])
                             ? Select::make('client_id')
                                 ->label('Client')
                                 ->options(\App\Models\Client::pluck('name', 'id')->toArray())

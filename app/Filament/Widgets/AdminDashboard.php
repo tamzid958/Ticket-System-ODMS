@@ -34,7 +34,7 @@ protected ?string $pollingInterval = null;
     public static function canView(): bool
     {
         $user = Auth::user();
-        return $user && !$user->client()->exists();
+        return $user && $user->hasAnyRole(['super_admin', 'support',]);
     }
 
     public function getColumnSpan(): int|string|array
