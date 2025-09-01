@@ -37,6 +37,7 @@ RUN npm run build
 
 RUN php artisan storage:link
 RUN php artisan clear-compiled
+RUN php artisan optimize
 
 RUN chmod +x /app/entrypoint.sh
 ENTRYPOINT ["/app/entrypoint.sh"]
