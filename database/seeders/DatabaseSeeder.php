@@ -17,15 +17,15 @@ class DatabaseSeeder extends Seeder
         $this->call(ShieldSeeder::class);
 
         // Seed Admin user
-        $user = User::firstOrCreate(
-            ['email' => 'admin@example.com'],
-            [
-                'name' => 'Admin',
-                'email' => 'admin@example.com',
-                'password' => Hash::make('password'),
-            ]
-        );
-        $user->assignRole('super_admin');
+//        $user = User::firstOrCreate(
+//            ['email' => 'admin@example.com'],
+//            [
+//                'name' => 'Admin',
+//                'email' => 'admin@example.com',
+//                'password' => Hash::make('password'),
+//            ]
+//        );
+//        $user->assignRole('super_admin');
 
         // Seed Packages
         $this->call(PackageSeeder::class);
