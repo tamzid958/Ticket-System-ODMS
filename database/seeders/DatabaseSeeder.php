@@ -16,18 +16,11 @@ class DatabaseSeeder extends Seeder
         // Seed roles & permissions
         $this->call(ShieldSeeder::class);
 
-        // Seed Admin user
-//        $user = User::firstOrCreate(
-//            ['email' => 'admin@example.com'],
-//            [
-//                'name' => 'Admin',
-//                'email' => 'admin@example.com',
-//                'password' => Hash::make('password'),
-//            ]
-//        );
-//        $user->assignRole('super_admin');
-
         // Seed Packages
         $this->call(PackageSeeder::class);
+
+        if (config('APP_ENV', 'dev') !== 'production') {
+            $this->call(UsersSeeder::class);
+        }
     }
 }
