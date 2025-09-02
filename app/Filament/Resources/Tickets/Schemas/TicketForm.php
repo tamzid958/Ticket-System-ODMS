@@ -67,7 +67,7 @@ class TicketForm
                 ->columnSpanFull()
                 ->extraAttributes(['style' => 'min-height: 300px;']),
             FileUpload::make('attachments')
-                ->label('ICD Document Upload')
+                ->label('attachments')
                 ->acceptedFileTypes([
                     // Images
                     'image/jpeg',
