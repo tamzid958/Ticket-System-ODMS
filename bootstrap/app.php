@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
             | Request::HEADER_X_FORWARDED_AWS_ELB
         );
 
+//        $envHosts = config('app.trusted_hosts', '');
         $envHosts = env('TRUSTED_HOSTS', '');
 
         if (!empty($envHosts)) {

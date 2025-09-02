@@ -123,4 +123,9 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'trusted_hosts' => env('TRUSTED_HOSTS', ''),
+
+    'contacts' => [
+        'mobile_no' => env('CONTACT_MOBILE_NO', ''),
+    ],
 ];

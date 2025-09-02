@@ -9,6 +9,7 @@
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.1",
         "bezhansalleh/filament-shield": "4.x-dev",
+        "devonab/filament-easy-footer": "^2.0",
         "filament/filament": "^4.0",
         "kirschbaum-development/commentions": "^0.6.5",
         "lara-zeus/boredom": "^2.0",

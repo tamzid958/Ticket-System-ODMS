@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use Devonab\FilamentEasyFooter\EasyFooterPlugin;
 use Filament\Http\Middleware\Authenticate;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -19,6 +20,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use App\Filament\Widgets\ClientDashboard;
 use App\Filament\Widgets\AdminDashboard;
@@ -59,7 +61,7 @@ class PanelPanelProvider extends PanelProvider
                 AdminDashboard::class,
                 \App\Filament\Widgets\AdminDashboardUnitCount::class,
             ])
-            ->topNavigation()
+//            ->topNavigation()
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -73,9 +75,12 @@ class PanelPanelProvider extends PanelProvider
             ])
             ->plugins([
                 FilamentShieldPlugin::make(),
+                FilamentApexChartsPlugin::make(),
+                EasyFooterPlugin::make()
+                    ->withFooterPosition('footer')
+                    ->footerEnabled(),
             ])
-
-            ->plugins([FilamentApexChartsPlugin::make()])
+            ->viteTheme('resources/css/filament/panel/theme.css')
             ->authMiddleware([
                 Authenticate::class,
             ]);
