@@ -67,7 +67,7 @@ class TicketForm
                 ->columnSpanFull()
                 ->extraAttributes(['style' => 'min-height: 300px;']),
             FileUpload::make('attachments')
-                ->label('attachments')
+                ->label('Attachments')
                 ->acceptedFileTypes([
                     // Images
                     'image/jpeg',
