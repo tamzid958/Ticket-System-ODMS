@@ -27,7 +27,7 @@ class TicketCreatedMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "ODMS Support:: New Ticket Created #{$this->ticket->id}"
+            subject: config('app.name') . " :: New Ticket Created #{$this->ticket->id}",
         );
     }
 
@@ -51,7 +51,7 @@ class TicketCreatedMail extends Mailable implements ShouldQueue
                 'ticketTitle'     => $this->ticket->subject,
                 'ticketDescription' => $this->ticket->description,
                 'createdAt'       => $this->ticket->created_at->format('d M Y, H:i'),
-                'ticketUrl'       => url('/panel/tickets/' . $this->ticket->id)
+                'ticketUrl'       => url('/panel/tickets/' . $this->ticket->id),
             ]
         );
     }

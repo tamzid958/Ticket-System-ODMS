@@ -118,16 +118,15 @@
 <body>
     <div class="email-container">
         <div class="email-header">
-            <h1 style="margin: 0; font-size: 28px; font-weight: 600;">ODMS Ticket Resolved</h1>
-            <p style="margin: 8px 0 0; font-size: 14px;">We're pleased to let you know your request has been completed</p>
+            <h1 style="margin: 0; font-size: 28px; font-weight: 600;">ODMS Support Ticket Resolved</h1>
         </div>
-        
+
         <div class="email-body">
-            <h3><p>Dear {{ $clientName }},</p></h3>
+            <h3><p>Dear {{ $creatorName }},</p></h3>
             <p style="font-size: 15px;">We're delighted to inform you that your support request has been successfully resolved by our team. We truly appreciate your patience and understanding throughout this process.</p>
-            
+
             <p style="font-size: 15px;">It's our pleasure to assist valued clients like you, and we hope our solution meets your expectations. Please don't hesitate to reach out if you need any further assistance.</p>
-            
+
             <table class="ticket-table">
                 <tr>
                     <th colspan="2">Ticket Information</th>
@@ -149,22 +148,22 @@
                     <td>{{ $resolvedAt }}</td>
                 </tr>
             </table>
-            
+
             <div style="text-align: center;">
                 <a href="{{ $ticketUrl }}" class="text-button">View Ticket Details</a>
             </div>
-            
+
             <div class="note-box">
                 <p style="margin: 0; color: #166534;">If you have any questions about the solution provided or need additional support, please don't hesitate to contact us. We're always here to help.</p>
             </div>
-            
+
             <p style="font-size: 15px;">Thank you for choosing our services. We value your trust in us and look forward to continuing to support your needs.</p>
         </div>
-        
+
         <div class="footer">
             <p style="margin: 0 0 15px;"><strong class="company-name">Dynamic Solutions Innovators</strong><br>
             Mohakhali DOHS, Dhaka, Bangladesh</p>
-            
+
             <p style="margin: 15px 0 0; font-size: 13px; line-height: 1.5;">
                 Your satisfaction is important to us. We would greatly appreciate it if you could take a moment to share your feedback about the support you received.
             </p>

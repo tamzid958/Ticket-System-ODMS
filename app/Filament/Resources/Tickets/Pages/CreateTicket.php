@@ -71,7 +71,7 @@ class CreateTicket extends CreateRecord
     }
 
     /**
-     * @description Sends email to ticket creator with relevant client & support users in BCC
+     * @description Sends ticket created email to ticket creator with relevant client & support users in BCC
      * @param Ticket $ticket
      * @return void
      */
@@ -83,8 +83,7 @@ class CreateTicket extends CreateRecord
         $supporters = User::role('support')->get();
 
         $bcc = $supporters->merge($clientUsers)
-            ->reject(fn($user) => $user->id === $recipient->id)
-            ->toArray();
+            ->reject(fn($user) => $user->id === $recipient->id);
 
         Mail::to($recipient)
             ->bcc($bcc)
@@ -93,7 +92,7 @@ class CreateTicket extends CreateRecord
         Log::info('Ticket Created Mail Sent.', [
             'ticket_id' => $ticket->id,
             'to'        => $recipient->email,
-            'bcc'       => $bcc, // array of emails
+            'bcc'       => $bcc->pluck('email')->toArray(),
         ]);
     }
 }
