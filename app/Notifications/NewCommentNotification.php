@@ -13,13 +13,15 @@ class NewCommentNotification extends Notification implements ShouldQueue
     use Queueable;
 
     protected $comment;
+    protected $bcc;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct($comment)
+    public function __construct($comment, $bcc = [])
     {
         $this->comment = $comment;
+        $this->bcc = $bcc;
     }
 
     /**
@@ -40,7 +42,8 @@ class NewCommentNotification extends Notification implements ShouldQueue
         return (new MailMessage)
             ->subject("New comment added on #{$this->comment->commentable->id}")
             ->line("A new comment was added for the ticket: {$this->comment->commentable->subject}")
-            ->action('View Comment', url("/tickets/{$this->comment->commentable->id}"));
+            ->action('View Comment', url("/tickets/{$this->comment->commentable->id}"))
+            ->bcc($this->bcc);
     }
 
     /**

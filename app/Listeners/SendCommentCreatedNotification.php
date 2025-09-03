@@ -2,15 +2,10 @@
 
 namespace App\Listeners;
 
-use App\Enums\MailStatus;
-use App\Mail\SupportMail;
 use App\Models\User;
 use App\Notifications\NewCommentNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Notification;
 use Kirschbaum\Commentions\Events\CommentWasCreatedEvent;
 
 class SendCommentCreatedNotification implements ShouldQueue
@@ -32,12 +27,16 @@ class SendCommentCreatedNotification implements ShouldQueue
     {
         $comment = $event->comment;
         $client = $comment->commentable->client;
+        $recipient = $comment->commentable->user;
 
         $clientUsers = $client->users;
         $supporters = User::role('support')->get();
 
-        $recipients = $supporters->merge($clientUsers);
+        $bcc = $supporters->merge($clientUsers)
+            ->reject(fn($user) => $user->id === $recipient->id)
+            ->pluck('email')
+            ->toArray();
 
-        Notification::send($recipients, new NewCommentNotification($comment));
+        $recipient->notify(new NewCommentNotification($comment, $bcc));
     }
 }
