@@ -109,16 +109,20 @@
 <body>
     <div class="email-container">
         <div class="email-header">
-            <h1 style="margin: 0; font-size: 28px; font-weight: 600;">ODMS Ticket Creation</h1>
-            <p style="margin: 8px 0 0; font-size: 14px;">Your attention is needed for a client request</p>
+            <h1 style="margin: 0; font-size: 28px; font-weight: 600;">New ODMS Support Ticket Created</h1>
         </div>
-        
+
         <div class="email-body">
-            <h3> <p>Hello Support Team,</p> </h3>
-            <p style="font-size: 15px;">We wanted to gently inform you that a new support ticket has been submitted by one of our valued clients. When you have a moment, we would greatly appreciate it if you could review the details below and take the appropriate action at your earliest convenience.</p>
-            
-            <p style="font-size: 15px;">Your expertise and timely response are truly valued, and we know you'll provide the excellent service our clients have come to expect from us.</p>
-            
+            <h3>Hello {{ $creatorName }},</h3>
+
+            <p style="font-size: 15px;">
+                Thank you for submitting a new support ticket. We have received your request and our support team will review the details shortly.
+            </p>
+
+            <p style="font-size: 15px;">
+                You can view or comment on the ticket anytime through your account if you have additional details to provide.
+            </p>
+
             <table class="ticket-table">
                 <tr>
                     <th colspan="2">Ticket Information</th>
@@ -140,27 +144,34 @@
                     <td>{{ $createdAt }}</td>
                 </tr>
             </table>
-            
+
             <div style="text-align: center;">
                 <a href="{{ $ticketUrl }}" class="text-button">Access Ticket Details</a>
             </div>
-            
+
             <div class="note-box">
-                <p style="margin: 0; color: #0c4a6e;">Our standard response time for new tickets is within 24 hours. If this ticket falls outside your area of expertise, we kindly ask that you reassign it to the appropriate team member.</p>
+                <p style="margin: 0; color: #0c4a6e;">
+                    You will be notified once a support agent has responded. We appreciate your patience and are committed to providing you with timely and effective assistance.
+                </p>
             </div>
+
         </div>
-        
+
         <div class="footer">
-            <p style="margin: 0 0 15px;"><strong class="company-name">Dynamic Solutions Innovators</strong><br>
-            Mohakhali DOHS, Dhaka, Bangladesh</p>
-            
-            <p style="margin: 15px 0 0; font-size: 13px; line-height: 1.5;">
-                If this ticket isn't relevant to your responsibilities, no action is required. Please avoid forwarding tickets unless they're specifically related to another team's work.
+            <p style="margin: 0 0 15px;">
+                <strong class="company-name">Dynamic Solutions Innovators</strong><br>
+                Mohakhali DOHS, Dhaka, Bangladesh
             </p>
+
+            <p style="margin: 15px 0 0; font-size: 13px; line-height: 1.5;">
+                This is a confirmation that your support ticket has been received. Our team will review it and get back to you as soon as possible.
+            </p>
+
             <p style="margin: 8px 0 0; font-size: 13px;">
-                We appreciate your attention to this matter and thank you for your continued support.
+                Thank you for reaching out to us. We appreciate your patience and value your engagement with our support services.
             </p>
         </div>
+
     </div>
 </body>
 </html>

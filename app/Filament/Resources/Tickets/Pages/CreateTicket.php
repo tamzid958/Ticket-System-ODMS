@@ -3,14 +3,15 @@
 namespace App\Filament\Resources\Tickets\Pages;
 
 use App\Filament\Resources\Tickets\TicketResource;
-use App\Mail\SupportMail;
-use App\Models\User;
+use App\Mail\TicketCreatedMail;
 use App\Models\Client;
 use App\Models\Package;
+use App\Models\Ticket;
+use App\Models\User;
 use App\Services\TicketUnitService;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Auth;
-use App\Enums\MailStatus;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
@@ -47,7 +48,7 @@ class CreateTicket extends CreateRecord
             // Ensure the ticket-specific directory exists
             Storage::disk('public')->makeDirectory("ticket-attachments/{$ticket->id}");
 
-            foreach ((array) $formData['attachments'] as $filePath) {
+            foreach ((array)$formData['attachments'] as $filePath) {
                 $filename = basename($filePath);
                 $newPath = "ticket-attachments/{$ticket->id}/{$filename}";
 
@@ -60,23 +61,39 @@ class CreateTicket extends CreateRecord
 
     protected function afterCreate(): void
     {
+        /** @var Ticket $ticket */
         $ticket = $this->record;
         $formData = $this->form->getState();
 
         $this->moveFilesToTicketFolder($ticket, $formData);
 
-        $subject = "ODMS Ticket Creation: {$ticket->subject}";
+        $this->sendTicketCreatedMail($ticket);
+    }
+
+    /**
+     * @description Sends email to ticket creator with relevant client & support users in BCC
+     * @param Ticket $ticket
+     * @return void
+     */
+    protected function sendTicketCreatedMail(Ticket $ticket): void
+    {
+        $recipient = $ticket->user;
+
+        $clientUsers = $ticket->client->users;
         $supporters = User::role('support')->get();
 
-        foreach ($supporters as $supporter) {
-            \App\Models\Mail::create([
-                'user_id' => $supporter->id,
-                'ticket_id' => $ticket->id,
-                'status' => MailStatus::PENDING,
-            ]);
+        $bcc = $supporters->merge($clientUsers)
+            ->reject(fn($user) => $user->id === $recipient->id)
+            ->toArray();
 
-            Mail::to($supporter->email)
-                ->queue(new SupportMail($subject, $ticket, $supporter->id));
-        }
+        Mail::to($recipient)
+            ->bcc($bcc)
+            ->send(new TicketCreatedMail($ticket));
+
+        Log::info('Ticket Created Mail Sent.', [
+            'ticket_id' => $ticket->id,
+            'to'        => $recipient->email,
+            'bcc'       => $bcc, // array of emails
+        ]);
     }
 }

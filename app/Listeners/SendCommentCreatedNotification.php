@@ -34,7 +34,6 @@ class SendCommentCreatedNotification implements ShouldQueue
 
         $bcc = $supporters->merge($clientUsers)
             ->reject(fn($user) => $user->id === $recipient->id)
-            ->pluck('email')
             ->toArray();
 
         $recipient->notify(new NewCommentNotification($comment, $bcc));
