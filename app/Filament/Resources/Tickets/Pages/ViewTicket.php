@@ -3,11 +3,11 @@
 namespace App\Filament\Resources\Tickets\Pages;
 
 use App\Filament\Resources\Tickets\TicketResource;
-use App\Mail\TicketCreatedMail;
 use App\Models\Ticket;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\RichEditor;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -19,6 +19,9 @@ class ViewTicket extends ViewRecord
 {
     protected static string $resource = TicketResource::class;
 
+    /**
+     * @throws \Exception
+     */
     protected function getHeaderActions(): array
     {
         return [
@@ -29,11 +32,26 @@ class ViewTicket extends ViewRecord
                 ->icon('heroicon-o-check')
                 ->visible(fn ($record) => $record->status !== TicketStatus::CLOSED)
                 ->requiresConfirmation()
-                ->action(function ($record) {
+                ->modalHeading('Resolve Ticket')
+                ->modalDescription('Are you sure you want to resolve this ticket?')
+                ->modalWidth(fn ($record) => auth()->user()->hasAnyRole(['support', 'super_admin']) ? '4xl' : 'lg')
+                ->schema([
+                    RichEditor::make('solution')
+                        ->label('How did you solve it?')
+                        ->required(fn () => auth()->user()->hasAnyRole(['support']))
+                        ->visible(fn () => auth()->user()->hasAnyRole(['support', 'super_admin']))
+                        ->columnSpanFull()
+                        ->extraAttributes(['style' => 'min-height: 200px;'])
+                        ->fileAttachmentsDisk('public')
+                        ->fileAttachmentsDirectory(fn (callable $get, $record) => "ticket-solutions/{$record->id}")
+                        ->fileAttachmentsVisibility('public'),
+                ])
+                ->action(function (array $data, $record) {
                     $record->update([
                         'status' => TicketStatus::CLOSED,
                         'resolved_at' => now(),
                         'resolved_by' => auth()->id(),
+                        'solution' => $data['solution'] ?? null,
                     ]);
 
                     $this->sendTicketResolvedMail($record);
