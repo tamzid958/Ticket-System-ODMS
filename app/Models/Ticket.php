@@ -29,6 +29,7 @@ class Ticket extends Model implements Commentable
         'client_id',
         'subject',
         'description',
+        'solution',
         'status',
         'resolved_at',
         'resolved_by',
