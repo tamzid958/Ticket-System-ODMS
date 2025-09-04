@@ -194,6 +194,14 @@ class TicketForm
                     return $service->getUnitMessage($ticketWeight, Carbon::parse($createdAt), $clientId);
                 })
                 ->columnSpanFull(),
+            RichEditor::make('solution')
+                ->label('How did you solve it?')
+                ->visible(fn ($record) => auth()->user()->hasAnyRole(['support', 'super_admin']) && $record->status->value === 'closed')
+                ->columnSpanFull()
+                ->extraAttributes(['style' => 'min-height: 200px;'])
+                ->fileAttachmentsDisk('public')
+                ->fileAttachmentsDirectory(fn (callable $get, $record) => "ticket-solutions/{$record->id}")
+                ->fileAttachmentsVisibility('public'),
         ]);
     }
 }

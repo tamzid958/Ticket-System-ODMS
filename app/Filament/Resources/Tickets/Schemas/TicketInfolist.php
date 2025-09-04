@@ -60,7 +60,7 @@ class TicketInfolist
                                     return "Created by {$state}  - {$createdAt}";
 
                                 }
-                
+
 
                                 return "Created by {$state} ({$clientName}) - {$createdAt}";
                             }),
@@ -74,14 +74,14 @@ class TicketInfolist
                         ->view('filament.components.file-links')
                         ->viewData(function ($record) {
                             $directory = "ticket-attachments/{$record->id}";
-                            
+
                             if (!Storage::disk('public')->exists($directory)) {
                                 return ['files' => []];
                             }
-                            
+
                             $files = Storage::disk('public')->files($directory);
                             $fileData = [];
-                            
+
                             foreach ($files as $file) {
                                 $fileData[] = [
                                     'name' => basename($file),
@@ -89,16 +89,15 @@ class TicketInfolist
                                     'size' => Storage::disk('public')->size($file),
                                 ];
                             }
-                            
+
                             return ['files' => $fileData];
                         })
                 ])
                 ->columnSpanFull(),
 
-
                 // Resolution Details (only if ticket is closed)
                 Section::make('Resolution Details')
-                    ->visible(fn($record) => $record->status->value === 'closed')
+                    ->visible(fn($record) => (!auth()->user()->hasAnyRole(['support', 'super_admin'])) && $record->status->value === 'closed')
                     ->schema([
                         TextEntry::make('resolved_at')
                             ->label('Resolved At')
@@ -107,6 +106,25 @@ class TicketInfolist
                         TextEntry::make('resolver.name')
                             ->label('Resolved By')
                             ->formatStateUsing(fn($state) => $state ?: '-'),
+
+                    ])
+                    ->columnSpanFull(),
+
+                Section::make('Resolution Details')
+                    ->visible(fn($record) => auth()->user()->hasAnyRole(['support', 'super_admin']) && $record->status->value === 'closed')
+                    ->schema([
+                        TextEntry::make('solution')
+                            ->label('Resolution Description')
+                            ->hiddenLabel()
+                            ->html(),
+
+                        TextEntry::make('resolver.name')
+                            ->label('Resolved By')
+                            ->hiddenLabel()
+                            ->formatStateUsing(function ($state, $record) {
+                                $resolvedAt = $record->resolved_at ? $record->resolved_at->diffForHumans() : '-';
+                                return "Resolved by {$state} - {$resolvedAt}";
+                            }),
 
                     ])
                     ->columnSpanFull(),
