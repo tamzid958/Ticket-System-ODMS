@@ -30,5 +30,7 @@ services:
             context: .
             dockerfile: supervisor/supervisor.dockerfile
         restart: unless-stopped
+        volumes:
+            - ~/tts_supervisor_logs:/var/www/html/storage/logs
         depends_on:
             -   db
