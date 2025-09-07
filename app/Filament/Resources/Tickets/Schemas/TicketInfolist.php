@@ -116,7 +116,7 @@ class TicketInfolist
                         TextEntry::make('solution')
                             ->label('Resolution Description')
                             ->hiddenLabel()
-                            ->html(),
+                            ->html()->extraAttributes(['class' => 'fi-prose']),
 
                         TextEntry::make('resolver.name')
                             ->label('Resolved By')
