@@ -44,7 +44,7 @@ class UserCreatedNotification extends Notification implements ShouldQueue
             ->line('**Email:** ' . $notifiable->email)
             ->line('**Temporary Password:** ' . $this->tempPassword)
             ->line('Please change your password immediately after login.')
-            ->action('Change Password', url('https://support-odms.innovatorslab.net/panel/profile'));
+            ->action('Change Password', url('/panel/profile'));
     }
 
     /**
