@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Tickets\Schemas;
 
+use App\Filament\Infolists\Components\HtmlEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 use Kirschbaum\Commentions\Filament\Infolists\Components\CommentsEntry;
@@ -113,10 +114,11 @@ class TicketInfolist
                 Section::make('Resolution Details')
                     ->visible(fn($record) => auth()->user()->hasAnyRole(['support', 'super_admin']) && $record->status->value === 'closed')
                     ->schema([
-                        TextEntry::make('solution')
+                        HtmlEntry::make('solution')
                             ->label('Resolution Description')
                             ->hiddenLabel()
-                            ->html()->extraAttributes(['class' => 'fi-prose']),
+                            ->lineClamp(5)
+                            ->html(),
 
                         TextEntry::make('resolver.name')
                             ->label('Resolved By')
