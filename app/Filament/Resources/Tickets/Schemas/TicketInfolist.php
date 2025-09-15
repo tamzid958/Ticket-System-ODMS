@@ -117,7 +117,7 @@ class TicketInfolist
                         HtmlEntry::make('solution')
                             ->label('Resolution Description')
                             ->hiddenLabel()
-                            ->lineClamp(5)
+                            ->lineClamp(3)
                             ->html(),
 
                         TextEntry::make('resolver.name')
