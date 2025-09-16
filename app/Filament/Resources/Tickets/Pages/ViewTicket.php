@@ -54,7 +54,42 @@ class ViewTicket extends ViewRecord
                         'solution' => $data['solution'] ?? null,
                     ]);
 
+                    Log::info("Ticket Resolved.",
+                        [
+                            'ticket_id' => $record->id,
+                            'resolved_by' => [
+                                'id' => auth()->id(),
+                                'name' => auth()->user()->name,
+                            ],
+                            'status' => TicketStatus::CLOSED,
+                        ]);
+
                     $this->sendTicketResolvedMail($record);
+                }),
+            Action::make('reopen')
+                ->label('Reopen Ticket')
+                ->color('warning')
+                ->icon('heroicon-o-arrow-path')
+                ->visible(fn ($record) => $record->status === TicketStatus::CLOSED && auth()->user()->hasAnyRole(['support', 'super_admin']))
+                ->requiresConfirmation()
+                ->modalHeading('Reopen Ticket')
+                ->modalDescription('Are you sure you want to reopen this ticket?')
+                ->action(function (array $data, $record) {
+                    $record->update([
+                        'status' => TicketStatus::OPEN,
+                        'resolved_at' => null,
+                        'resolved_by' => null,
+                    ]);
+
+                    Log::info("Ticket Reopened.",
+                        [
+                            'ticket_id' => $record->id,
+                            'reopened_by' => [
+                                'id' => auth()->id(),
+                                'name' => auth()->user()->name,
+                            ],
+                            'status' => TicketStatus::OPEN,
+                        ]);
                 }),
         ];
     }
