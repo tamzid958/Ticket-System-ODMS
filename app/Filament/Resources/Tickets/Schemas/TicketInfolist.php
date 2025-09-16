@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Tickets\Schemas;
 
+use App\Enums\TicketStatus;
 use App\Filament\Infolists\Components\HtmlEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
@@ -98,7 +99,7 @@ class TicketInfolist
 
                 // Resolution Details (only if ticket is closed)
                 Section::make('Resolution Details')
-                    ->visible(fn($record) => (!auth()->user()->hasAnyRole(['support', 'super_admin'])) && $record->status->value === 'closed')
+                    ->visible(fn($record) => (!auth()->user()->hasAnyRole(['support', 'super_admin'])) && $record->status === TicketStatus::CLOSED)
                     ->schema([
                         TextEntry::make('resolved_at')
                             ->label('Resolved At')
@@ -112,7 +113,7 @@ class TicketInfolist
                     ->columnSpanFull(),
 
                 Section::make('Resolution Details')
-                    ->visible(fn($record) => auth()->user()->hasAnyRole(['support', 'super_admin']) && $record->status->value === 'closed')
+                    ->visible(fn($record) => auth()->user()->hasAnyRole(['support', 'super_admin']) && $record->status === TicketStatus::CLOSED)
                     ->schema([
                         HtmlEntry::make('solution')
                             ->label('Resolution Description')
