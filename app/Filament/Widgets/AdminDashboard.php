@@ -76,41 +76,6 @@ class AdminDashboard extends ApexChartWidget
             $colors[] = AppUtil::generateColorCode((string)$client->name);
         }
 
-        return [
-            'chart' => [
-                'type' => 'bar',
-                'height' => 400,
-            ],
-            'series' => [
-                [
-                    'name' => 'Bill:',
-                    'data' => $monthlyBills,
-                ],
-            ],
-            'xaxis' => [
-                'categories' => $clientNames,
-                'labels' => [
-                    'style' => [
-                        'fontFamily' => 'inherit',
-                        'fontWeight' => 600,
-                    ],
-                ],
-            ],
-            'yaxis' => [
-                'labels' => [
-                    'style' => [
-                        'fontFamily' => 'inherit',
-                    ],
-                ],
-            ],
-            'colors' => $colors,
-            'plotOptions' => [
-                'bar' => [
-                    'borderRadius' => 5,
-                    'horizontal' => true,
-                    'distributed' => true, // one color per bar
-                ],
-            ],
-        ];
+        return AppUtil::getTreeMapConfig($clientNames, $monthlyBills, $colors);
     }
 }
