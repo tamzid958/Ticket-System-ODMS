@@ -7,6 +7,7 @@ use App\Models\Ticket;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use ZipArchive;
 
 class TicketReportController extends Controller
 {
@@ -83,5 +84,31 @@ class TicketReportController extends Controller
 
         return $pdf->download("Report-{$client->name}-{$fromDate->format('F-Y')}.pdf");
     }
+
+    public function downloadAllPreviousMonth()
+{
+    $now = Carbon::now('Asia/Dhaka')->subMonth();
+    $year = $now->year;
+    $month = $now->month;
+
+    $clients = Client::all();
+
+    $zipFileName = "All-Reports-{$now->format('F-Y')}.zip";
+    $zipPath = storage_path("app/{$zipFileName}");
+
+    $zip = new ZipArchive;
+    if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+        foreach ($clients as $client) {
+            // reuse existing download() logic, but capture the PDF instead of streaming
+            $response = $this->download($client, $year, str_pad($month, 2, '0', STR_PAD_LEFT));
+            $pdfContent = $response->getOriginalContent();
+
+            $zip->addFromString("{$client->name}-{$now->format('F-Y')}.pdf", $pdfContent);
+        }
+        $zip->close();
+    }
+
+    return response()->download($zipPath)->deleteFileAfterSend(true);
+}
 
 }

@@ -22,6 +22,18 @@ class TicketsTable
         $defaultYear = now()->year;
 
         return $table
+    ->headerActions([
+            Action::make('downloadPreviousMonthReports')
+                ->label('Download Previous Month Reports')
+                   ->icon('heroicon-o-arrow-down-tray')
+                ->visible(fn() => auth()->user()->hasAnyRole(['super_admin', 'support']))
+                ->action(function () {
+                    // Call your controller method
+                    return app(\App\Http\Controllers\TicketReportController::class)
+                            ->downloadAllPreviousMonth();
+                })
+                ->requiresConfirmation(false),
+        ])
      ->query(function () {
                 return Ticket::query()
                     ->when(auth()->user()->hasRole('client'), function ($query) {
