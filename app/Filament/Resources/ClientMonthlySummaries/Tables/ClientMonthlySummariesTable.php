@@ -109,6 +109,17 @@ class ClientMonthlySummariesTable
             ])
             ->recordActions([
                 ViewAction::make(),
+                Action::make('download')
+                    ->label('Download')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->action(fn ($record) => redirect()->route(
+                        'reports.tickets.download',
+                        [
+                            'client' => $record->client_id,
+                            'year' => $record->year,
+                            'month' => $record->month,
+                        ]
+                    )),
             ])
 
             ->headerActions([
@@ -151,6 +162,16 @@ class ClientMonthlySummariesTable
                             'year' => $year,
                             'month' => $month,
                         ]);
+                    })
+                    ->requiresConfirmation(false),
+                Action::make('downloadPreviousMonthReports')
+                    ->label('Download Previous Month Reports')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->visible(fn() => auth()->user()->hasAnyRole(['super_admin', 'support']))
+                    ->action(function () {
+                        // Call your controller method
+                        return app(\App\Http\Controllers\TicketReportController::class)
+                            ->downloadAllPreviousMonth();
                     })
                     ->requiresConfirmation(false),
             ]);
