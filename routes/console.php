@@ -10,5 +10,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command(GenerateMonthlySummary::class)
-    ->monthlyOn(1, '00:10')
+    ->everyThirtyMinutes()
     ->withoutOverlapping();
