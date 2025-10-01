@@ -15,7 +15,7 @@ class GenerateMonthlySummary extends Command
      *
      * @var string
      */
-    protected $signature = 'summary:client-monthly';
+    protected $signature = 'summary:client-monthly {month?} {year?}';
 
     /**
      * The console command description.
@@ -39,25 +39,44 @@ class GenerateMonthlySummary extends Command
     public function handle()
     {
         $summaryMonthInt = $this->argument('month');
+        $summaryYearInt = $this->argument('year');
 
-        $summaryMonth = $summaryMonthInt ? Carbon::now()->month($summaryMonthInt) : Carbon::now();
-        $summaryMonth = $summaryMonth->copy()->startOfMonth();
+        $summaryMonth = Carbon::now();
+
+        if ($summaryMonthInt) {
+            $summaryMonth->month($summaryMonthInt);
+        }
+
+        if ($summaryYearInt) {
+            $summaryMonth->year($summaryYearInt);
+        }
+
+        if (!$summaryMonthInt && !$summaryYearInt) {
+            $summaryMonth->subMonth();
+        }
+
+        $summaryMonth->startOfMonth();
 
         foreach (Client::all() as $client) {
 
-            $clientMonthlySummary = $this->clientMonthlySummaryService->getMonthlyClientSummary(
-                $client->id,
-                $summaryMonth->year,
-                $summaryMonth->month,
-            );
+            $clientMonthlySummaryRecord = ClientMonthlySummary::where('client_id', $client->id)
+                ->where('year', $summaryMonth->year)
+                ->where('month', $summaryMonth->month)
+                ->first();
 
-            ClientMonthlySummary::firstOrCreate(
-                [
+            if (!$clientMonthlySummaryRecord) {
+
+                $clientMonthlySummary = $this->clientMonthlySummaryService->getMonthlyClientSummary(
+                    $client->id,
+                    $summaryMonth->year,
+                    $summaryMonth->month,
+                );
+
+                // Create new record
+                ClientMonthlySummary::create([
                     'client_id' => $client->id,
                     'year' => $summaryMonth->year,
                     'month' => $summaryMonth->month,
-                ],
-                [
                     'package_id' => $clientMonthlySummary['package_id'],
                     'monthly_quota' => $clientMonthlySummary['monthly_quota'],
                     'excess_per_unit_price' => $clientMonthlySummary['excess_per_unit_price'],
@@ -68,12 +87,10 @@ class GenerateMonthlySummary extends Command
                     'unit_discount' => $clientMonthlySummary['unit_discount'],
                     'excess_unit_cost' => $clientMonthlySummary['excess_unit_cost'],
                     'total_cost' => $clientMonthlySummary['total_cost'],
-                ]
-            );
+                ]);
 
-            $this->info("Summary for client [{$client->name}] for {$summaryMonth->format('F Y')} generated.");
+                $this->info("Summary for client [{$client->name}] for {$summaryMonth->format('F Y')} generated.");
+            }
         }
-
-        $this->info("Client monthly summary generation for {$summaryMonth->format('F Y')} completed.");
     }
 }
