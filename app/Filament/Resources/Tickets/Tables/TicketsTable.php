@@ -2,27 +2,27 @@
 
 namespace App\Filament\Resources\Tickets\Tables;
 
-use Illuminate\Support\Arr;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Table;
-use App\Models\Ticket;
-use Filament\Actions\Action;
 use App\Enums\TicketStatus;
-use Filament\Tables\Filters\Filter;
-use Filament\Tables\Columns\IconColumn;
-use Filament\Forms\Components\Select;
+use App\Models\Client;
+use App\Models\Ticket;
 use Carbon\Carbon;
-use Filament\Notifications\Notification;
+use Exception;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Select;
+use Filament\Support\Enums\TextSize;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Table;
 
 class TicketsTable
 {
+    /**
+     * @throws Exception
+     */
     public static function configure(Table $table): Table
     {
-        $defaultMonth = now()->month;
-        $defaultYear = now()->year;
-
         return $table
-     ->query(function () {
+            ->query(function () {
                 return Ticket::query()
                     ->when(auth()->user()->hasRole('client'), function ($query) {
                         $query->where('client_id', auth()->user()->client_id);
@@ -31,59 +31,69 @@ class TicketsTable
             })
             ->defaultSort('created_at', 'desc')
             ->columns(array_filter([
-
-                TextColumn::make('user.name')
-                    ->label('User')
-                    ->sortable()
-                    ->formatStateUsing(function ($state, $record) {
-                        if (auth()->user()->hasRole('client')) {
-                            return $state;
-                        }
-                        return $state . ' (' . ($record->client?->name ?? 'No Client') . ')';
-                    }),
                 TextColumn::make('subject')
                     ->searchable()
-                    ->limit(25)
-                    ->tooltip(fn($record) => $record->subject),
+                    ->wrap()
+                    ->formatStateUsing(function ($state, Ticket $record) {
+                        if (!auth()->user()->hasRole('client')) {
+                            return "[{$record->client?->name}] " . $state;
+                        }
 
-                TextColumn::make('created_at')
-                    ->label('Created At')
-                    ->formatStateUsing(function ($state) {
-                        return now()->parse($state)->format('Y-m-d') . "<br>" . now()->parse($state)->format('h:i A');
+                        return $state;
                     })
-                    ->html()
-                    ->sortable(),
+                    ->description(function (Ticket $record): string {
+                        $createdBy = $record->user?->name ?? 'N/A';
+                        $createdAt = $record->created_at?->format('d M Y, h:i A') ?? 'N/A';
+
+                        $clientName = $record->user?->client?->name;
+
+                        if (!auth()->user()->hasRole('client') && $clientName) {
+                            return "Created by $createdBy ($clientName) at $createdAt";
+                        }
+
+                        return "Created by $createdBy at $createdAt";
+                    })
+                    ->sortable(query: fn($query, string $direction) => $query->orderBy('created_at', $direction)),
+                TextColumn::make('unit_value')
+                    ->label('Tags')
+                    ->state(function (Ticket $record): array {
+                        return array_filter([
+                            "Unit Value: $record->unit_value",
+                            $record->is_excess_unit ? 'Excess' : null,
+                            $record->is_weekend_unit ? 'Holiday' : null,
+                        ]);
+                    })
+                    ->badge()
+                    ->color(fn($state) => match ($state) {
+                        'Excess' => 'danger',
+                        'Holiday' => 'primary',
+                        default => 'gray',
+                    })
+                    ->size(TextSize::Large)
+                    ->alignStart()
+                    ->verticallyAlignCenter()
+                    ->listWithLineBreaks(),
                 TextColumn::make('status')
                     ->badge()
                     ->sortable()
                     ->alignCenter()
-                    ->size('xl')
-
-                    ->color(function ($state) {
-                        $value = $state instanceof TicketStatus ? $state->value : $state;
-
-                        return match ($value) {
-                            TicketStatus::CLOSED->value => 'success',
-                            TicketStatus::PENDING->value => 'warning',
-                            TicketStatus::OPEN->value => 'danger',
-                            default => 'gray',
-                        };
-                    })
+                    ->size(TextSize::Large)
+//                    ->tooltip(function (TicketStatus $state, Ticket $record): ?string {
+//                        if ($state == TicketStatus::CLOSED) {
+//                            $resolvedBy = $record->resolver?->name ?? 'N/A';
+//                            $resolvedAt = $record->resolved_at?->format('d M Y, h:i A') ?? 'N/A';
+//                            return "Resolved by $resolvedBy at $resolvedAt";
+//                        }
+//
+//                        return null;
+//                    })
                     ->extraAttributes([
                         'class' => 'text-base font-semibold px-4 py-2',
                     ]),
-
-                TextColumn::make('unit_value')
-                    ->label('Unit Value')
-                    ->alignCenter(),
-                IconColumn::make('is_excess_unit')
-                    ->label('Excess Unit')
-                    ->boolean()
-                    ->trueIcon('heroicon-o-check')
-                    ->falseIcon('heroicon-o-x-mark')
-                    ->alignCenter(),
             ]))
-
+            ->recordActions([
+                ViewAction::make(),
+            ])
             ->filters(
                 array_filter([
                     // Date range filter
@@ -114,17 +124,17 @@ class TicketsTable
                                     range(now()->year, now()->year - 5)
                                 )),
 
-                                // Show client selector only to admins
+                            // Show client selector only to admins
                             auth()->user()->hasAnyRole(['super_admin', 'support',])
-                            ? Select::make('client_id')
+                                ? Select::make('client_id')
                                 ->label('Client')
-                                ->options(\App\Models\Client::pluck('name', 'id')->toArray())
+                                ->options(Client::pluck('name', 'id')->toArray())
                                 ->placeholder('Select a Client') // <-- ADD THIS LINE
-                            : null,
+                                : null,
                         ])
                         ->query(function ($query, array $data) {
                             if (!empty($data['month']) && !empty($data['year'])) {
-                                $from = Carbon::create($data['year'], $data['month'], 1)->startOfMonth();
+                                $from = Carbon::create($data['year'], $data['month'])->startOfMonth();
                                 $to = $from->copy()->endOfMonth();
                                 $query->whereBetween('created_at', [$from, $to]);
                             }
@@ -136,7 +146,6 @@ class TicketsTable
                 ])
 
             );
-
 
 
     }
