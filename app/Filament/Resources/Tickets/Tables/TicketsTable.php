@@ -71,8 +71,8 @@ class TicketsTable
                     })
                     ->size(TextSize::Large)
                     ->alignStart()
-                    ->verticallyAlignCenter()
-                    ->listWithLineBreaks(),
+//                    ->listWithLineBreaks()
+                    ->verticallyAlignCenter(),
                 TextColumn::make('status')
                     ->badge()
                     ->sortable()
