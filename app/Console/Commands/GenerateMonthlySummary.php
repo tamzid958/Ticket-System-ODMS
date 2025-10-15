@@ -2,11 +2,14 @@
 
 namespace App\Console\Commands;
 
+use App\Models\User;
 use App\Models\Client;
 use App\Models\ClientMonthlySummary;
 use App\Services\ClientMonthlySummaryService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ClientMonthlySummaryGeneratedMail;
 
 class GenerateMonthlySummary extends Command
 {
@@ -64,7 +67,7 @@ class GenerateMonthlySummary extends Command
                 ->where('month', $summaryMonth->month)
                 ->first();
 
-            if (!$clientMonthlySummaryRecord) {
+            if (!$clientMonthlySummaryRecord && $client->is_report_generated_by_default) {
 
                 $clientMonthlySummary = $this->clientMonthlySummaryService->getMonthlyClientSummary(
                     $client->id,
@@ -90,6 +93,18 @@ class GenerateMonthlySummary extends Command
                 ]);
 
                 $this->info("Summary for client [{$client->name}] for {$summaryMonth->format('F Y')} generated.");
+                
+
+         
+                $users = User::all();
+
+                foreach ($users as $user) {
+                    if ($user->hasRole('super_admin')) { 
+                        Mail::to($user->email)
+                            ->queue(new ClientMonthlySummaryGeneratedMail($clientMonthlySummaryRecord));
+                    }
+                }
+
             }
         }
     }

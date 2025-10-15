@@ -15,6 +15,8 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 
 class TicketsTable
+
+
 {
     /**
      * @throws Exception

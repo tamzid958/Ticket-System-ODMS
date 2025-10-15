@@ -51,11 +51,7 @@ class ClientMonthlySummariesTable
                     })
                     ->wrap(),
 
-                TextColumn::make('unit_used')->numeric(),
-                TextColumn::make('excess_unit_used')->numeric(),
-                TextColumn::make('excess_per_unit_price')->numeric(),
-                TextColumn::make('excess_unit_cost')->numeric(),
-                TextColumn::make('total_cost')->numeric(),
+
             ])
             ->filters([
                 Filter::make('month')
@@ -108,7 +104,6 @@ class ClientMonthlySummariesTable
                     ]),
             ])
             ->recordActions([
-                ViewAction::make(),
                 Action::make('download')
                     ->label('Download')
                     ->icon('heroicon-o-arrow-down-tray')
@@ -122,58 +117,50 @@ class ClientMonthlySummariesTable
                     )),
             ])
 
-            ->headerActions([
-                Action::make('downloadReport')
-                    ->label('Download PDF')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->color('primary')
-                    ->disabled(function ($livewire): bool {
-                        $user = auth()->user();
+            // ->headerActions([
+            //     Action::make('downloadReport')
+            //         ->label('Download PDF')
+            //         ->icon('heroicon-o-arrow-down-tray')
+            //         ->color('primary')
+            //         ->disabled(function ($livewire): bool {
+            //             $user = auth()->user();
 
-                        // If admin → require client, year and month
-                        if ($user->client_id === null) {
-                            return empty($livewire->tableFilters['month']['client_id'])
-                                || empty($livewire->tableFilters['month']['year'])
-                                || empty($livewire->tableFilters['month']['month']);
-                        }
+            //             // If admin → require client, year and month
+            //             if ($user->client_id === null) {
+            //                 return empty($livewire->tableFilters['month']['client_id'])
+            //                     || empty($livewire->tableFilters['month']['year'])
+            //                     || empty($livewire->tableFilters['month']['month']);
+            //             }
 
-                        // If client user → require only year and month
-                        return empty($livewire->tableFilters['month']['year'])
-                            || empty($livewire->tableFilters['month']['month']);
-                    })
-                    ->action(function (Action $action, $livewire) {
-                        $month = Arr::get($livewire->tableFilters, 'month.month', now()->month);
-                        $year = Arr::get($livewire->tableFilters, 'month.year', now()->year);
+            //             // If client user → require only year and month
+            //             return empty($livewire->tableFilters['month']['year'])
+            //                 || empty($livewire->tableFilters['month']['month']);
+            //         })
+            //         ->action(function (Action $action, $livewire) {
+            //             $month = Arr::get($livewire->tableFilters, 'month.month', now()->month);
+            //             $year = Arr::get($livewire->tableFilters, 'month.year', now()->year);
 
-                        $clientId = auth()->user()->client_id ?: Arr::get($livewire->tableFilters, 'month.client_id');
+            //             $clientId = auth()->user()->client_id ?: Arr::get($livewire->tableFilters, 'month.client_id');
 
-                        if (empty($clientId)) {
-                            Notification::make()
-                                ->title('Client Not Selected')
-                                ->body('Please select a client from the filters to generate a report.')
-                                ->danger()
-                                ->send();
-                            $action->halt();
-                            return;
-                        }
+            //             if (empty($clientId)) {
+            //                 Notification::make()
+            //                     ->title('Client Not Selected')
+            //                     ->body('Please select a client from the filters to generate a report.')
+            //                     ->danger()
+            //                     ->send();
+            //                 $action->halt();
+            //                 return;
+            //             }
 
-                        return redirect()->route('reports.tickets.download', [
-                            'client' => $clientId,
-                            'year' => $year,
-                            'month' => $month,
-                        ]);
-                    })
-                    ->requiresConfirmation(false),
-                Action::make('downloadPreviousMonthReports')
-                    ->label('Download Previous Month Reports')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->visible(fn() => auth()->user()->hasAnyRole(['super_admin', 'support']))
-                    ->action(function () {
-                        // Call your controller method
-                        return app(\App\Http\Controllers\TicketReportController::class)
-                            ->downloadAllPreviousMonth();
-                    })
-                    ->requiresConfirmation(false),
-            ]);
+            //             return redirect()->route('reports.tickets.download', [
+            //                 'client' => $clientId,
+            //                 'year' => $year,
+            //                 'month' => $month,
+            //             ]);
+            //         })
+            //         ->requiresConfirmation(false),
+         
+            // ])
+            ;
     }
 }
