@@ -18,6 +18,7 @@ class Client extends Model
         'name',
         'package_id',
         'discount',
+        'is_report_generated_by_default'
     ];
 
     protected $casts = [
@@ -46,6 +47,7 @@ class Client extends Model
         'name',
         'package_id',
         'discount',
+        'is_report_generated_by_default'
     ];
 
     public function versionedInstance(Carbon $date = null)

@@ -61,13 +61,26 @@ class Ticket extends Model implements Commentable
         'updated_at' => 'datetime',
     ];
     // Relationships
-    public function user() { return $this->belongsTo(User::class); }
+// In Ticket.php
+    public function user()
+    {
+        return $this->belongsTo(User::class)->withTrashed();
+    }
     public function client() { return $this->belongsTo(Client::class); }
     public function resolver()
     {
-        return $this->belongsTo(User::class, 'resolved_by');
+        return $this->belongsTo(User::class, 'resolved_by')->withTrashed();
     }
 
+        public function commentsQuery(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->comments()
+            ->latest()
+            ->with([
+                'author' => fn($q) => $q->withTrashed(),
+                'reactions.reactor'
+            ]);
+    }
 
     // Boot method for auto-filling fields
     protected static function booted()
