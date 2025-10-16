@@ -10,72 +10,54 @@ use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ClientMonthlySummaryGeneratedMail;
+use App\Http\Controllers\TicketReportController;
+use Illuminate\Support\Facades\Storage;
+use ZipArchive;
 
 class GenerateMonthlySummary extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'summary:client-monthly {month?} {year?}';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Generate monthly summaries per client';
 
     protected ClientMonthlySummaryService $clientMonthlySummaryService;
+    protected TicketReportController $ticketReportController;
 
-    public function __construct(ClientMonthlySummaryService $clientMonthlySummaryService)
-    {
+    public function __construct(
+        ClientMonthlySummaryService $clientMonthlySummaryService,
+        TicketReportController $ticketReportController
+    ) {
         parent::__construct();
         $this->clientMonthlySummaryService = $clientMonthlySummaryService;
+        $this->ticketReportController = $ticketReportController;
     }
 
-
-    /**
-     * Execute the console command.
-     */
     public function handle()
     {
         $summaryMonthInt = $this->argument('month');
         $summaryYearInt = $this->argument('year');
-
         $summaryMonth = Carbon::now();
 
-        if ($summaryMonthInt) {
-            $summaryMonth->month($summaryMonthInt);
-        }
-
-        if ($summaryYearInt) {
-            $summaryMonth->year($summaryYearInt);
-        }
-
-        if (!$summaryMonthInt && !$summaryYearInt) {
-            $summaryMonth->subMonth();
-        }
+        if ($summaryMonthInt) $summaryMonth->month($summaryMonthInt);
+        if ($summaryYearInt) $summaryMonth->year($summaryYearInt);
+        if (!$summaryMonthInt && !$summaryYearInt) $summaryMonth->subMonth();
 
         $summaryMonth->startOfMonth();
 
-        foreach (Client::all() as $client) {
+        $generatedClients = [];
 
+        foreach (Client::all() as $client) {
             $clientMonthlySummaryRecord = ClientMonthlySummary::where('client_id', $client->id)
                 ->where('year', $summaryMonth->year)
                 ->where('month', $summaryMonth->month)
                 ->first();
 
             if (!$clientMonthlySummaryRecord && $client->is_report_generated_by_default) {
-
                 $clientMonthlySummary = $this->clientMonthlySummaryService->getMonthlyClientSummary(
                     $client->id,
                     $summaryMonth->year,
                     $summaryMonth->month,
                 );
 
-                // Create new record
                 ClientMonthlySummary::create([
                     'client_id' => $client->id,
                     'year' => $summaryMonth->year,
@@ -93,19 +75,54 @@ class GenerateMonthlySummary extends Command
                 ]);
 
                 $this->info("Summary for client [{$client->name}] for {$summaryMonth->format('F Y')} generated.");
-                
 
-         
-                $users = User::all();
-
-                foreach ($users as $user) {
-                    if ($user->hasRole('super_admin')) { 
-                        Mail::to($user->email)
-                            ->queue(new ClientMonthlySummaryGeneratedMail($clientMonthlySummaryRecord));
-                    }
-                }
-
+                $generatedClients[] = $client;
             }
+        }
+
+        // Only proceed if there are generated reports
+        if (count($generatedClients) > 0) {
+            $this->info('Generating report PDFs and sending email...');
+
+            $now = $summaryMonth;
+            $zipFileName = "All-Reports-{$now->format('F-Y')}.zip";
+            $zipPath = storage_path("app/{$zipFileName}");
+
+            $zip = new ZipArchive;
+            if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+                foreach ($generatedClients as $client) {
+                    $response = $this->ticketReportController->download($client, $now->year, str_pad($now->month, 2, '0', STR_PAD_LEFT));
+                    $pdfContent = $response->getOriginalContent();
+                    $zip->addFromString("{$client->name}-{$now->format('F-Y')}.pdf", $pdfContent);
+                }
+                $zip->close();
+            }
+
+
+                  
+            $users = User::all();
+            $superAdmins = [];
+
+            foreach ($users as $user) {
+                if ($user->hasRole('super_admin')) { 
+                    $superAdmins[] = $user;
+                }
+            }
+            $superAdmins = collect($superAdmins);
+            $to = $superAdmins->first()?->email;
+            $cc = $superAdmins->skip(1)->pluck('email')->toArray();
+
+            if ($to) {
+                Mail::to($to)
+                    ->cc($cc)
+                    ->send(new ClientMonthlySummaryGeneratedMail($zipPath, $now));
+                $this->info("Email sent to super admins with all reports attached.");
+            }
+
+            // delete the zip file after sending
+            Storage::delete("app/{$zipFileName}");
+        } else {
+            $this->info('No new client reports generated. No email sent.');
         }
     }
 }

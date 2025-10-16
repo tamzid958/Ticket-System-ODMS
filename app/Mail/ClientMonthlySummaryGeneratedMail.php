@@ -2,33 +2,34 @@
 
 namespace App\Mail;
 
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use App\Models\ClientMonthlySummary;
 
-class ClientMonthlySummaryGeneratedMail extends Mailable implements ShouldQueue
+class ClientMonthlySummaryGeneratedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public ClientMonthlySummary $summary;
+    public string $zipPath;
+    public Carbon $month;
 
-    public function __construct(ClientMonthlySummary $summary)
+    public function __construct(string $zipPath, Carbon $month)
     {
-        $this->summary = $summary;
+        $this->zipPath = $zipPath;
+        $this->month = $month;
     }
 
     public function build()
     {
-        return $this->subject("Monthly Summary Generated: Client #{$this->summary->client_id}")
-                    ->view('mail.client-monthly-summary')
+        return $this->subject("Client Monthly Reports – {$this->month->format('F Y')}")
+                    ->view('mail.client_monthly_summary_generated')
                     ->with([
-                        'clientName' => $this->summary->client->name,
-                        'month' => $this->summary->month,
-                        'year' => $this->summary->year,
-                        'totalCost' => $this->summary->total_cost,
-                        'summaryUrl' => url("/panel/client-monthly-summaries/{$this->summary->id}"),
+                        'month' => $this->month, // ✅ pass $month to the view
+                    ])
+                    ->attach($this->zipPath, [
+                        'as' => "All-Reports-{$this->month->format('F-Y')}.zip",
+                        'mime' => 'application/zip',
                     ]);
     }
 }
