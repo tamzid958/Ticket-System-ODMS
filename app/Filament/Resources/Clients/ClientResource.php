@@ -25,6 +25,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 use UnitEnum;
+use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Columns\IconColumn;
+
+
 class ClientResource extends Resource
 {
     protected static ?string $model = Client::class;
@@ -74,6 +78,13 @@ class ClientResource extends Resource
                         ];
                     })
                     ->columnSpanFull(),
+
+
+                Toggle::make('is_report_generated_by_default')
+                    ->label('Will Generate Report by Default')
+                    ->default(true)
+                    ->columnSpanFull(),
+                
                 Select::make('users')
                     ->multiple()
                     ->label('Users')
@@ -98,22 +109,27 @@ class ClientResource extends Resource
                     ->sortable()
                     ->formatStateUsing(fn ($state) => number_format($state, 2))
                     ->extraAttributes(['class' => 'text-right']),
+    
+                ToggleColumn::make('is_report_generated_by_default')
+                    ->label('Generate Report by Default')
+                    ->sortable(),
+    
                 TextColumn::make('users_display')
                     ->label('Users')
                     ->getStateUsing(function ($record) {
                         $users = $record->relationLoaded('users') ? $record->users : $record->users()->get();
-
+    
                         $uniqueUsers = $users->unique('id');
                         $userNames = $uniqueUsers->pluck('name');
-
+    
                         if ($userNames->isEmpty()) {
                             return 'No users assigned';
                         }
-
+    
                         if ($userNames->count() <= 3) {
                             return $userNames->join(', ');
                         }
-
+    
                         return $userNames->take(3)->join(', ') . ' and ' . ($userNames->count() - 3) . ' more...';
                     })
                     ->tooltip(function ($record) {
@@ -122,6 +138,7 @@ class ClientResource extends Resource
                         return $uniqueUsers->pluck('name')->join(', ');
                     })
                     ->wrap(),
+    
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -152,7 +169,6 @@ class ClientResource extends Resource
                 ]),
             ]);
     }
-
     public static function getPages(): array
     {
         return [
