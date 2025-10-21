@@ -67,7 +67,7 @@ class GenerateMonthlySummary extends Command
                 ->where('month', $summaryMonth->month)
                 ->first();
 
-            if (!$clientMonthlySummaryRecord && $client->is_report_generated_by_default) {
+            if (!$clientMonthlySummaryRecord && $client->will_generate_report) {
 
                 $clientMonthlySummary = $this->clientMonthlySummaryService->getMonthlyClientSummary(
                     $client->id,

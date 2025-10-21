@@ -15,6 +15,7 @@ use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -23,10 +24,8 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 use Filament\Tables\Columns\ToggleColumn;
-use Filament\Tables\Columns\IconColumn;
 
 
 class ClientResource extends Resource
@@ -80,8 +79,8 @@ class ClientResource extends Resource
                     ->columnSpanFull(),
 
 
-                Toggle::make('is_report_generated_by_default')
-                    ->label('Will Generate Report by Default')
+                Toggle::make('will_generate_report')
+                    ->label('Generate Report Automatically')
                     ->default(true)
                     ->columnSpanFull(),
                 
@@ -110,8 +109,8 @@ class ClientResource extends Resource
                     ->formatStateUsing(fn ($state) => number_format($state, 2))
                     ->extraAttributes(['class' => 'text-right']),
     
-                ToggleColumn::make('is_report_generated_by_default')
-                    ->label('Generate Report by Default')
+                ToggleColumn::make('will_generate_report')
+                    ->label('Generate Report Automatically')
                     ->sortable(),
     
                 TextColumn::make('users_display')
