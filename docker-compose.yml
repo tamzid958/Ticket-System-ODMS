@@ -14,7 +14,7 @@ services:
             - db
 
     db:
-        image: postgres:latest
+        image: postgres:17.6
         restart: unless-stopped
         environment:
             POSTGRES_DB: ${DB_DATABASE}
